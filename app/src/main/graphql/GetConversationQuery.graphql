@@ -1,0 +1,80 @@
+query GetConversationQuery($id: ID!, $markAsRead: Boolean) {
+  conversation(id: $id, markAsRead: $markAsRead) {
+    id
+    updatedAt
+    unreadMessages
+    groups {
+      id
+      name
+    }
+    users {
+      id
+      name
+      nickname
+      avatarImageFile {
+        id
+      }
+    }
+    messages {
+      id
+      content
+      insertedAt
+      updatedAt
+      files {
+        id
+        filename
+        fileType
+        filesize
+      }
+      user {
+        id
+        name
+        nickname
+        avatarImageFile {
+          id
+        }
+      }
+    }
+  }
+}
+
+query AddMessageToConversationLocalCacheMutation($id: ID!)
+@apollo_client_ios_localCacheMutation {
+  conversation(id: $id, markAsRead: true) {
+    id
+    updatedAt
+    unreadMessages
+    groups {
+      id
+      name
+    }
+    users {
+      id
+      name
+      nickname
+      avatarImageFile {
+        id
+      }
+    }
+    messages {
+      id
+      content
+      insertedAt
+      updatedAt
+      files {
+        id
+        filename
+        fileType
+        filesize
+      }
+      user {
+        id
+        name
+        nickname
+        avatarImageFile {
+          id
+        }
+      }
+    }
+  }
+}
