@@ -3,7 +3,6 @@ package net.einsa.lotta.composition
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import net.einsa.lotta.UserSession
 import net.einsa.lotta.model.ID
 
 class ModelData {

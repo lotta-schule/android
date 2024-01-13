@@ -1,6 +1,11 @@
-package net.einsa.lotta
+package net.einsa.lotta.composition
 
+import androidx.compose.runtime.compositionLocalOf
 import com.auth0.jwt.JWT
+import net.einsa.lotta.AuthInfo
+import net.einsa.lotta.GetCurrentUserQuery
+import net.einsa.lotta.GetTenantQuery
+import net.einsa.lotta.LoginMutation
 import net.einsa.lotta.api.CoreApi
 import net.einsa.lotta.model.Tenant
 import net.einsa.lotta.model.User
@@ -85,4 +90,8 @@ class UserSession// TODO: Should get tenantId for subscriptions
 
         // Todo: Register for remote notifications
     }
+}
+
+val LocalUserSession = compositionLocalOf<UserSession> {
+    error("No UserSession provided")
 }

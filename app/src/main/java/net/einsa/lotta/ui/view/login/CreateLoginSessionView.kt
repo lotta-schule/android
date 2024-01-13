@@ -44,7 +44,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import net.einsa.lotta.R
-import net.einsa.lotta.UserSession
+import net.einsa.lotta.composition.UserSession
 import net.einsa.lotta.model.Tenant
 import net.einsa.lotta.model.TenantDescriptor
 import net.einsa.lotta.model.getUrl
