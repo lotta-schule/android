@@ -4,6 +4,8 @@ plugins {
     id("com.apollographql.apollo3") version "3.8.2"
 
     kotlin("plugin.serialization") version "1.9.22"
+
+    id("io.sentry.android.gradle") version "4.1.1"
 }
 
 android {
@@ -92,4 +94,13 @@ apollo {
     service("service") {
         packageName.set("net.einsa.lotta")
     }
+}
+
+sentry {
+    org.set("lotta")
+    projectName.set("android")
+
+    // this will upload your source code to Sentry to show it as part of the stack traces
+    // disable if you don't want to expose your sources
+    includeSourceContext.set(true)
 }
