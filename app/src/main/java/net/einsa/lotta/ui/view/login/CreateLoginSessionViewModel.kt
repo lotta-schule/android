@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import net.einsa.lotta.composition.UserSession
 import net.einsa.lotta.api.LOTTA_API_HTTP_URL
+import net.einsa.lotta.composition.UserSession
 import net.einsa.lotta.model.ListTenantResult
 import net.einsa.lotta.model.TenantDescriptor
 import okhttp3.OkHttpClient
@@ -34,7 +34,7 @@ class CreateLoginSessionViewModel : ViewModel() {
         )
     }
 
-    suspend fun fetchPossibleTenants(email: String): List<TenantDescriptor> {
+    private suspend fun fetchPossibleTenants(email: String): List<TenantDescriptor> {
         return withContext(Dispatchers.IO) {
             val url = "$LOTTA_API_HTTP_URL/api/public/user-tenants?username=$email"
 

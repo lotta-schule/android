@@ -221,6 +221,7 @@ fun UserAuthPasswordTextField(
                 onSubmit()
             },
         ),
+        singleLine = true,
         modifier = Modifier
             .padding(horizontal = Dp(8.0F))
             .fillMaxWidth()
