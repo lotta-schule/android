@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import io.sentry.Sentry
 import net.einsa.lotta.composition.LocalModelData
 import net.einsa.lotta.composition.ModelData
 import net.einsa.lotta.ui.theme.LottaTheme
@@ -16,6 +17,15 @@ import net.einsa.lotta.ui.view.RootView
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // waiting for view to draw to better represent a captured error with a screenshot
+        findViewById<android.view.View>(android.R.id.content).viewTreeObserver.addOnGlobalLayoutListener {
+            try {
+                throw Exception("This app uses Sentry! :)")
+            } catch (e: Exception) {
+                Sentry.captureException(e)
+            }
+        }
+
         App.set(window.context.applicationContext)
         setContent {
             LottaTheme {

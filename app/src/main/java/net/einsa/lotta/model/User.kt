@@ -1,7 +1,11 @@
 package net.einsa.lotta.model
 
+import io.sentry.SentryOptions
+import kotlinx.serialization.Serializable
 import net.einsa.lotta.GetCurrentUserQuery
+import io.sentry.protocol.User as SentryUser
 
+@Serializable()
 data class User(
     var tenant: Tenant,
     var id: ID,
@@ -22,5 +26,17 @@ data class User(
                 avatarImageFileId = userData.avatarImageFile?.id,
             )
         }
+    }
+
+    fun toSentryUser(): SentryUser {
+        return SentryUser.fromMap(
+            mapOf(
+                "id" to id,
+                "name" to name,
+                "username" to nickname,
+                "email" to email,
+            ),
+            SentryOptions()
+        )
     }
 }

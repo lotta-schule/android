@@ -1,7 +1,9 @@
 package net.einsa.lotta.model
 
+import kotlinx.serialization.Serializable
 import net.einsa.lotta.GetTenantQuery
 
+@Serializable()
 data class Tenant(
     val id: ID,
     val title: String,

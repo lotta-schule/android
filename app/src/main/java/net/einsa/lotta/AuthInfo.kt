@@ -5,16 +5,31 @@ import com.auth0.jwt.interfaces.DecodedJWT
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import net.einsa.lotta.api.LOTTA_API_HTTP_URL
+import net.einsa.lotta.serializer.JWTSerializer
+import net.einsa.lotta.util.SecretKeyStore
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class AuthInfo {
+    constructor(accessToken: DecodedJWT? = null, refreshToken: DecodedJWT? = null) {
+        this.accessToken = accessToken
+        this.refreshToken = refreshToken
+    }
+
     var accessToken: DecodedJWT? = null
     var refreshToken: DecodedJWT? = null
         set(value) {
-            // TODO: Save refresh token to secure storage
-            // if let stringValue = newValue ?. string, let tid = newValue?.claim(name: "tid").integer, let uid = newValue?.subject {
-            //     keychain.set(stringValue, forKey: "\(tid)-\(uid)--refresh-token")
-            // }
+            value?.let { refreshToken ->
+                val tid = refreshToken.getClaim("tid")?.asInt()
+                    ?: throw Exception("Refresh token is not valid")
+                val uid = refreshToken.subject
+                    ?: throw Exception("Refresh token is not valid")
+
+                SecretKeyStore.instance.set(
+                    SecretKeyStore.refreshTokenKey(uid, tid.toString()),
+                    refreshToken.token
+                )
+            }
             field = value
         }
 
@@ -47,13 +62,15 @@ class AuthInfo {
         val tid = refreshToken!!.getClaim("tid")?.asInt()
             ?: throw Exception("Refresh token is not valid")
 
-        val url = "$LOTTA_API_HTTP_URL/auth/token/refresh?token=${refreshToken.toString()}"
+        val url = "$LOTTA_API_HTTP_URL/auth/token/refresh?token=${refreshToken!!.token}"
 
         val request =
             okhttp3.Request.Builder()
                 .url(url)
                 .header("tenant", "id:$tid")
-                .method("POST", null)
+                .method(
+                    "POST", ByteArray(0).toRequestBody(null, 0, 0)
+                )
                 .build()
 
         OkHttpClient().newCall(request).execute().use { response ->
@@ -62,13 +79,20 @@ class AuthInfo {
             }
             val jsonString = response.body!!.string()
 
-            Json.decodeFromString<TokenPair>(jsonString)
+            val tokenPair = Json.decodeFromString<TokenPair>(jsonString)
+
+            accessToken = tokenPair.accessToken
+            refreshToken = tokenPair.refreshToken
         }
     }
 }
 
+@Serializable
 class TokenPair(
+    @Serializable(with = JWTSerializer::class)
     var accessToken: DecodedJWT? = null,
+
+    @Serializable(with = JWTSerializer::class)
     var refreshToken: DecodedJWT? = null,
 ) {
 

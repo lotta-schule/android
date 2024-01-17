@@ -37,12 +37,12 @@ class AuthorizationInterceptor(
         // else
         //  - the access token may be valid, just use it
         if (loginSession?.accessToken?.expiresAt == null || loginSession!!.accessToken!!.expiresAt.time < System.currentTimeMillis()) {
-            try {
+            return try {
                 loginSession?.renew()
-                return addTokenAndProceed(loginSession?.accessToken, request, chain)
+                addTokenAndProceed(loginSession?.accessToken, request, chain)
             } catch (e: Exception) {
                 e.printStackTrace()
-                return chain.proceed(request)
+                chain.proceed(request)
             }
         } else {
             return addTokenAndProceed(loginSession?.accessToken, request, chain)

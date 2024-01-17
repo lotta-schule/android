@@ -3,6 +3,8 @@ package net.einsa.lotta.composition
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import io.sentry.Sentry
+import net.einsa.lotta.api.baseCacheDir
 import net.einsa.lotta.model.ID
 
 class ModelData {
@@ -20,20 +22,26 @@ class ModelData {
         private set
 
     val currentSession: UserSession?
-        get() {
-            userSessions.find { it.tenant.id == currentSessionTenantId.value }
-            return userSessions.find {
-                it.tenant.id == currentSessionTenantId.value
-            } ?: userSessions.firstOrNull()
-        }
+        get() = userSessions.find {
+            it.tenant.id == currentSessionTenantId.value
+        } ?: userSessions.firstOrNull()
 
-    fun initializeSessions() {
-        // TODO: Read sessions from disk
+    suspend fun initializeSessions() {
+        if (!baseCacheDir.exists()) {
+            try {
+                baseCacheDir.mkdirs()
+            } catch (e: Exception) {
+                Sentry.captureException(e)
+                println("Failed to create cache dir")
+                println(e)
+            }
+        }
+        userSessions.addAll(UserSession.readFromDisk())
         // TODO: Setup Remote notifications
         initialized = true
     }
 
-    fun setSession(tenantId: ID): Boolean {
+    private fun setSession(tenantId: ID): Boolean {
         if (currentSessionTenantId.value == tenantId) {
             return true
         }
@@ -41,7 +49,15 @@ class ModelData {
 
         // TODO: persist current session. Do UserDefaults exist?
         currentSessionTenantId.value = tenantId
-        // TODO: Configure Sentry
+        Sentry.configureScope { scope ->
+            scope.setContexts(
+                "tenant", mapOf(
+                    "id" to session.tenant.id,
+                    "slug" to session.tenant.slug
+                )
+            )
+            scope.user = session.user.toSentryUser()
+        }
         return true
     }
 

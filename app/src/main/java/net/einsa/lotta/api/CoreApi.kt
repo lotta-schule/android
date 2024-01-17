@@ -1,8 +1,10 @@
 package net.einsa.lotta.api
 
+import android.content.Context
 import com.apollographql.apollo3.ApolloClient
 import net.einsa.lotta.App
 import net.einsa.lotta.AuthInfo
+import java.io.File
 import java.net.URI
 
 const val LOTTA_API_HOST = "core.lotta.schule"
@@ -12,11 +14,11 @@ val LOTTA_API_HTTP_URL =
 val LOTTA_API_WEBSOCKET_URL =
     (if (USE_SECURE_CONNECTION) "wss" else "ws") + "://$LOTTA_API_HOST/api/graphql-socket/websocket"
 
-val baseCacheDirURL = App.get().filesDir.toURI()
-    .resolve(
-        LOTTA_API_HOST.replace(Regex(":\\d{4,5}\$"), "")
-            .trim('.')
-    )
+val baseCacheDir =
+    App.get().getDir(
+        LOTTA_API_HOST.replace(Regex(":\\d{4,5}\$"), ""),
+        Context.MODE_PRIVATE
+    )!!
 
 class CoreApi() {
     var apollo: ApolloClient
@@ -25,10 +27,8 @@ class CoreApi() {
     var cacheUrl: URI? = null
 
     companion object {
-        fun getCacheUrl(tenantId: String): URI {
-            val sqliteFileURL = baseCacheDirURL.resolve("tenant_$tenantId.sqlite")
-            println(sqliteFileURL)
-            return sqliteFileURL
+        fun getCacheFile(tenantId: String): File {
+            return baseCacheDir.resolve("tenant_$tenantId.sqlite")
         }
     }
 
@@ -45,7 +45,7 @@ class CoreApi() {
                 .httpServerUrl("$LOTTA_API_HTTP_URL/api")
                 .addHttpHeader("Tenant", "slug:$tenantSlug")
                 .addHttpInterceptor(AuthorizationInterceptor(loginSession))
-                // TODO: Add refresh token interceptor
+                .addHttpInterceptor(RefreshTokenInterceptor(loginSession))
                 .build()
 
     }
