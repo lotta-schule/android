@@ -12,13 +12,13 @@ data class Tenant(
     val logoImageFileId: ID? = null,
 ) {
     companion object {
-        fun from(tenantData: GetTenantQuery.Data): Tenant {
+        fun from(tenant: GetTenantQuery.Tenant): Tenant {
             return Tenant(
-                id = tenantData.tenant!!.id!!,
-                title = tenantData.tenant.title!!,
-                slug = tenantData.tenant.slug!!,
-                backgroundImageFileId = tenantData.tenant.configuration?.backgroundImageFile?.id,
-                logoImageFileId = tenantData.tenant.configuration?.logoImageFile?.id,
+                id = tenant.id!!,
+                title = tenant.title!!,
+                slug = tenant.slug!!,
+                backgroundImageFileId = tenant.configuration?.backgroundImageFile?.id,
+                logoImageFileId = tenant.configuration?.logoImageFile?.id,
             )
         }
     }

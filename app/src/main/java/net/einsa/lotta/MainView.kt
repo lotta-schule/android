@@ -27,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import net.einsa.lotta.ui.theme.LottaTheme
 import net.einsa.lotta.ui.view.messaging.MessagingView
+import net.einsa.lotta.ui.view.profile.ProfileView
 
 enum class MainScreen(val route: String, val title: String? = null) {
     MESSAGING("messages", title = "Nachrichten"),
@@ -78,7 +79,7 @@ fun MainView() {
                 }
             }
             composable(route = MainScreen.PROFILE.route) {
-                Text("Profil")
+                ProfileView()
             }
         }
 

@@ -1,6 +1,8 @@
 package net.einsa.lotta.composition
 
 import androidx.compose.runtime.compositionLocalOf
+import com.apollographql.apollo3.cache.normalized.FetchPolicy
+import com.apollographql.apollo3.cache.normalized.fetchPolicy
 import com.auth0.jwt.JWT
 import io.sentry.Sentry
 import kotlinx.serialization.Serializable
@@ -28,7 +30,7 @@ class UserSession// TODO: Should get tenantId for subscriptions
             val tenantGraphqlResponse = genericApi.apollo.query(GetTenantQuery()).execute()
             val tenantData = tenantGraphqlResponse.dataAssertNoErrors
 
-            val tenant = Tenant.from(tenantData)
+            val tenant = Tenant.from(tenantData.tenant!!)
 
             val authInfo = AuthInfo()
             val tenantApi = CoreApi(tenantSlug = tenant.slug, loginSession = authInfo)
@@ -122,7 +124,7 @@ class UserSession// TODO: Should get tenantId for subscriptions
                         sessions.add(userSession)
 
                         userSession.refetchUserData()
-                        // TODO: userSession.refetchTenantData()
+                        userSession.refetchTenantData()
 
                         userSession.writeToDisk()
                     } catch (e: Exception) {
@@ -161,9 +163,19 @@ class UserSession// TODO: Should get tenantId for subscriptions
 
     suspend fun refetchUserData() {
         // TODO: Make sure apollo does not hit the cache on this one
-        val userGraphqlResponse = api.apollo.query(GetCurrentUserQuery()).execute()
+        val userGraphqlResponse =
+            api.apollo.query(GetCurrentUserQuery()).fetchPolicy(FetchPolicy.NetworkFirst)
+                .execute()
         val user = userGraphqlResponse.dataAssertNoErrors.currentUser!!
         this.user = User.from(user, tenant = tenant)
+
+        // Todo: Register for remote notifications
+    }
+
+    suspend fun refetchTenantData() {
+        val tenantGraphqlResponse = api.apollo.query(GetTenantQuery()).execute()
+        val tenant = tenantGraphqlResponse.dataAssertNoErrors.tenant!!
+        this.tenant = Tenant.from(tenant)
 
         // Todo: Register for remote notifications
     }
@@ -186,6 +198,15 @@ class UserSession// TODO: Should get tenantId for subscriptions
     fun removeFromDisk() {
         baseCacheDir.resolve("usersession-${tenant.slug}-${user.id}.json")
             .delete()
+    }
+
+    fun removeFromKeychain() {
+        SecretKeyStore.instance.remove(
+            SecretKeyStore.refreshTokenKey(
+                user.id,
+                tenant.id
+            )
+        )
     }
 }
 

@@ -5,7 +5,6 @@ import com.apollographql.apollo3.ApolloClient
 import net.einsa.lotta.App
 import net.einsa.lotta.AuthInfo
 import java.io.File
-import java.net.URI
 
 const val LOTTA_API_HOST = "core.lotta.schule"
 const val USE_SECURE_CONNECTION = true
@@ -24,7 +23,7 @@ class CoreApi() {
     var apollo: ApolloClient
         private set
 
-    var cacheUrl: URI? = null
+    var cacheUrl: File? = null
 
     companion object {
         fun getCacheFile(tenantId: String): File {
@@ -47,6 +46,11 @@ class CoreApi() {
                 .addHttpInterceptor(AuthorizationInterceptor(loginSession))
                 .addHttpInterceptor(RefreshTokenInterceptor(loginSession))
                 .build()
+    }
 
+    fun resetCache() {
+        cacheUrl?.let {
+            it.runCatching { delete() }
+        }
     }
 }
