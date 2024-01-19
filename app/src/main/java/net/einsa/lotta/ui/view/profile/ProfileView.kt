@@ -4,12 +4,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import net.einsa.lotta.composition.LocalModelData
+import net.einsa.lotta.ui.component.LottaButton
 import net.einsa.lotta.ui.component.UserAvatar
 import net.einsa.lotta.util.UserUtil.Companion.getVisibleName
 
@@ -36,8 +36,6 @@ fun ProfileView() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = { modelData.removeCurrentSession() }) {
-            Text("Abmelden")
-        }
+        LottaButton(onClick = { modelData.removeCurrentSession() }, text = "Abmelden")
     }
 }

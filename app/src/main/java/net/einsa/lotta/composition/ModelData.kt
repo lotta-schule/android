@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import io.sentry.Sentry
 import net.einsa.lotta.api.baseCacheDir
 import net.einsa.lotta.model.ID
+import net.einsa.lotta.model.Theme
 import net.einsa.lotta.util.UserDefaults
 
 class ModelData {
@@ -21,6 +22,9 @@ class ModelData {
 
     var initialized = false
         private set
+
+    val theme: Theme
+        get() = currentSession?.tenant?.customTheme ?: Theme()
 
     val currentSession: UserSession?
         get() = userSessions.find {

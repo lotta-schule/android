@@ -1,7 +1,7 @@
 package net.einsa.lotta.ui.view.messaging
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,8 +20,11 @@ import net.einsa.lotta.composition.LocalUserSession
 import net.einsa.lotta.ui.component.Avatar
 import net.einsa.lotta.util.ConversationUtil
 
-@Composable()
-fun ConversationsList(vm: ConversationsListViewModel = viewModel()) {
+@Composable
+fun ConversationsList(
+    vm: ConversationsListViewModel = viewModel(),
+    onSelectConversation: (GetConversationsQuery.Conversation) -> Unit
+) {
     val userSession = LocalUserSession.current
     val scope = rememberCoroutineScope()
 
@@ -34,13 +37,18 @@ fun ConversationsList(vm: ConversationsListViewModel = viewModel()) {
 
     LazyColumn {
         items(vm.conversations, key = { it.id!! }) { conversation ->
-            ConversationListItemView(conversation)
+            ConversationListItemView(
+                conversation,
+                onSelect = { onSelectConversation(conversation) })
         }
     }
 }
 
-@Composable()
-fun ConversationListItemView(conversation: GetConversationsQuery.Conversation) {
+@Composable
+fun ConversationListItemView(
+    conversation: GetConversationsQuery.Conversation,
+    onSelect: () -> Unit
+) {
     val userSession = LocalUserSession.current
     val imageUrl = ConversationUtil.getImage(
         conversation = conversation,
@@ -51,12 +59,14 @@ fun ConversationListItemView(conversation: GetConversationsQuery.Conversation) {
     Row(
         modifier = Modifier
             .height(48.dp)
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable { onSelect() },
         verticalAlignment = Alignment.CenterVertically
     ) {
         imageUrl?.let {
             Avatar(
                 url = imageUrl,
+                size = 88,
                 contentDescription = "Avatar von ${
                     ConversationUtil.getTitle(
                         conversation,
@@ -64,7 +74,6 @@ fun ConversationListItemView(conversation: GetConversationsQuery.Conversation) {
                     )
                 }",
                 modifier = Modifier
-                    .fillMaxHeight()
                     .padding(end = 8.dp)
             )
         }

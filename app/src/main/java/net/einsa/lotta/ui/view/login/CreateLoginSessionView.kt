@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -48,6 +47,7 @@ import net.einsa.lotta.composition.UserSession
 import net.einsa.lotta.model.Tenant
 import net.einsa.lotta.model.TenantDescriptor
 import net.einsa.lotta.model.getUrl
+import net.einsa.lotta.ui.component.LottaButton
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -183,15 +183,15 @@ fun CreateLoginSessionView(
                     onSubmit = { onSubmit() })
             }
 
-            Button(
+            LottaButton(
                 enabled = selectedTenantDescriptor != null && email.isNotEmpty() && password.isNotEmpty(),
                 modifier = Modifier
                     .padding(Dp(8.0F)),
+                text = "Anmelden",
                 onClick = {
                     onSubmit()
-                }) {
-                Text("Anmelden")
-            }
+                }
+            )
         }
 
     }

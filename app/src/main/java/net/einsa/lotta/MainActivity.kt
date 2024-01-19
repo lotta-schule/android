@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import io.sentry.Sentry
 import net.einsa.lotta.composition.LocalModelData
 import net.einsa.lotta.composition.ModelData
+import net.einsa.lotta.model.Theme
 import net.einsa.lotta.ui.theme.LottaTheme
 import net.einsa.lotta.ui.view.RootView
 
@@ -28,7 +29,8 @@ class MainActivity : ComponentActivity() {
 
         App.set(window.context.applicationContext)
         setContent {
-            LottaTheme {
+            val theme = ModelData.instance.currentSession?.tenant?.customTheme ?: Theme()
+            LottaTheme(theme) {
                 CompositionLocalProvider(LocalModelData provides ModelData.instance) {
                     // A surface container using the 'background' color from the theme
                     Surface(

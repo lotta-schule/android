@@ -13,44 +13,64 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import net.einsa.lotta.ui.theme.LottaTheme
+import net.einsa.lotta.composition.LocalModelData
+import net.einsa.lotta.ui.view.messaging.ConversationView
 import net.einsa.lotta.ui.view.messaging.MessagingView
 import net.einsa.lotta.ui.view.profile.ProfileView
 
-enum class MainScreen(val route: String, val title: String? = null) {
+enum class MainScreen(
+    val route: String,
+    val title: String? = null,
+    arguments: List<NamedNavArgument> = emptyList()
+) {
     MESSAGING("messages", title = "Nachrichten"),
     PROFILE("profile", title = "Profil"),
     CONVERSATIONS("messages/all", title = "Nachrichten"),
-    CONVERSATION("messages/{conversationId}")
+    CONVERSATION(
+        "messages/{conversationId}?title={title}", arguments = listOf(
+            navArgument("title") { nullable = true }
+        )
+    )
 }
 
-@Composable()
+@Composable
 fun MainView() {
     val navController = rememberNavController()
     val backStackEntry = navController.currentBackStackEntryAsState()
 
     val currentScreen =
         MainScreen.entries.find { it.route == backStackEntry.value?.destination?.route }
-            ?: MainScreen.MESSAGING
+            ?: MainScreen.CONVERSATIONS
+
+    val canNavigateBack = navController.currentBackStackEntry != null &&
+            currentScreen.route != MainScreen.CONVERSATIONS.route && currentScreen.route != MainScreen.PROFILE.route
+
+    val canCreateMessage = currentScreen.route == MainScreen.CONVERSATIONS.route
 
     Scaffold(
         topBar = {
             TopAppBar(
-                currentScreen = currentScreen,
-                canNavigateBack = navController.currentBackStackEntry != null,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = if (!canNavigateBack) null else ({ navController.popBackStack() }),
+                onCreateMessage = if (!canCreateMessage) null else ({}),
+                title = navController.currentBackStackEntry?.arguments?.getString("title")
+                    ?: currentScreen.title ?: currentScreen.name
             )
         },
         bottomBar = {
@@ -72,10 +92,13 @@ fun MainView() {
                 route = MainScreen.MESSAGING.route
             ) {
                 composable(route = MainScreen.CONVERSATIONS.route) {
-                    MessagingView()
+                    MessagingView(navController = navController)
                 }
                 composable(route = MainScreen.CONVERSATION.route) {
-                    Text("Nachricht")
+                    val conversationId = it.arguments?.getString("conversationId")
+                    if (conversationId != null) {
+                        ConversationView(conversationId)
+                    }
                 }
             }
             composable(route = MainScreen.PROFILE.route) {
@@ -91,26 +114,37 @@ fun MainView() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable()
-fun TopAppBar(currentScreen: MainScreen, canNavigateBack: Boolean, onNavigateBack: () -> Unit) {
+fun TopAppBar(title: String, onCreateMessage: (() -> Unit)?, onNavigateBack: (() -> Unit)?) {
+    val modelData = LocalModelData.current
+
     MediumTopAppBar(
-        title = { currentScreen.title?.let { Text(it) } },
+        title = { Text(title) },
         navigationIcon = {
-            if (canNavigateBack) {
-                IconButton(onClick = onNavigateBack) {
+            onNavigateBack?.let {
+                IconButton(onClick = it) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Zurück"
                     )
-
                 }
             }
         },
         actions = {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Neue Nachricht schreiben"
-            )
-        }
+            if (onCreateMessage != null) {
+                IconButton(onClick = onCreateMessage) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Neue Nachricht schreiben"
+                    )
+                }
+            }
+        },
+        colors = TopAppBarDefaults.mediumTopAppBarColors(
+            titleContentColor = Color(modelData.theme.textColor.toArgb()),
+            containerColor = Color(modelData.theme.pageBackgroundColor.toArgb()),
+            actionIconContentColor = Color(modelData.theme.textColor.toArgb()),
+            navigationIconContentColor = Color(modelData.theme.textColor.toArgb()),
+        )
     )
 }
 
@@ -119,7 +153,11 @@ fun BottomNavigationBar(
     onSelect: (MainScreen) -> Unit,
     currentNavDestination: NavDestination? = null
 ) {
-    NavigationBar {
+    val modelData = LocalModelData.current
+
+    NavigationBar(
+        containerColor = Color(modelData.theme.navigationBackgroundColor.toArgb()),
+    ) {
         NavigationBarItem(
             selected = currentNavDestination?.hierarchy?.any { it.route == MainScreen.MESSAGING.route }
                 ?: false,
@@ -130,7 +168,13 @@ fun BottomNavigationBar(
                     contentDescription = null
                 )
             },
-            label = { MainScreen.MESSAGING.title?.let { Text(it) } }
+            label = { MainScreen.MESSAGING.title?.let { Text(it) } },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(modelData.theme.primaryColor.toArgb()),
+                selectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
+                unselectedIconColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
+                unselectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb())
+            )
         )
         NavigationBarItem(
             selected = currentNavDestination?.hierarchy?.any { it.route == MainScreen.PROFILE.route }
@@ -142,15 +186,19 @@ fun BottomNavigationBar(
                     contentDescription = null
                 )
             },
-            label = { MainScreen.PROFILE.title?.let { Text(it) } }
+            label = { MainScreen.PROFILE.title?.let { Text(it) } },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(modelData.theme.primaryColor.toArgb()),
+                selectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
+                unselectedIconColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
+                unselectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb())
+            )
         )
     }
 }
 
-@Preview()
-@Composable()
+@Preview
+@Composable
 fun MainViewPreview() {
-    LottaTheme {
-        MainView()
-    }
+    MainView()
 }

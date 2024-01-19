@@ -27,11 +27,13 @@ class CreateLoginSessionViewModel : ViewModel() {
         email: String,
         password: String
     ): UserSession {
-        return UserSession.createFromCredentials(
-            tenantSlug = tenant.slug,
-            username = email,
-            password = password
-        )
+        return withContext(Dispatchers.IO) {
+            UserSession.createFromCredentials(
+                tenantSlug = tenant.slug,
+                username = email,
+                password = password
+            )
+        }
     }
 
     private suspend fun fetchPossibleTenants(email: String): List<TenantDescriptor> {
