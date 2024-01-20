@@ -23,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavDestination
@@ -55,7 +56,6 @@ enum class MainScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainView(vm: MainViewModel = viewModel()) {
     val navController = rememberNavController()
@@ -128,7 +128,7 @@ fun MainView(vm: MainViewModel = viewModel()) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable()
+@Composable
 fun TopAppBar(title: String, onCreateMessage: (() -> Unit)?, onNavigateBack: (() -> Unit)?) {
     val modelData = LocalModelData.current
 
@@ -170,6 +170,20 @@ fun BottomNavigationBar(
 ) {
     val modelData = LocalModelData.current
 
+    val colors = NavigationBarItemDefaults.colors(
+        selectedIconColor = Color(modelData.theme.primaryColor.toArgb()),
+        selectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
+        indicatorColor = ColorUtils.blendARGB(
+            modelData.theme.navigationBackgroundColor.toArgb(),
+            modelData.theme.primaryColor.toArgb(),
+            0.1f
+        ).let {
+            Color(it)
+        },
+        unselectedIconColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
+        unselectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb())
+    )
+
     NavigationBar(
         containerColor = Color(modelData.theme.navigationBackgroundColor.toArgb()),
     ) {
@@ -184,12 +198,7 @@ fun BottomNavigationBar(
                 )
             },
             label = { MainScreen.MESSAGING.title?.let { Text(it) } },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(modelData.theme.primaryColor.toArgb()),
-                selectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
-                unselectedIconColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
-                unselectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb())
-            )
+            colors = colors
         )
         NavigationBarItem(
             selected = currentNavDestination?.hierarchy?.any { it.route == MainScreen.PROFILE.route }
@@ -202,12 +211,7 @@ fun BottomNavigationBar(
                 )
             },
             label = { MainScreen.PROFILE.title?.let { Text(it) } },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(modelData.theme.primaryColor.toArgb()),
-                selectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
-                unselectedIconColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
-                unselectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb())
-            )
+            colors = colors
         )
     }
 }
