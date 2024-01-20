@@ -9,7 +9,7 @@ class UserDefaults {
         var instance: UserDefaults = UserDefaults()
     }
 
-    private val sharedPreferences: SharedPreferences = App.get().getSharedPreferences("lotta", 0)
+    private val sharedPreferences: SharedPreferences = App.context.getSharedPreferences("lotta", 0)
 
     fun setTenantId(tenantId: ID) {
         sharedPreferences.edit().apply {

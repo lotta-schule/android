@@ -18,7 +18,7 @@ val LOTTA_API_WEBSOCKET_URL =
     (if (USE_SECURE_CONNECTION) "wss" else "ws") + "://$LOTTA_API_HOST/api/graphql-socket/websocket"
 
 val baseCacheDir =
-    App.get().getDir(
+    App.context.getDir(
         LOTTA_API_HOST.replace(Regex(":\\d{4,5}\$"), ""),
         Context.MODE_PRIVATE
     )!!

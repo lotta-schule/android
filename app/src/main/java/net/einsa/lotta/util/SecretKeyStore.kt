@@ -7,13 +7,13 @@ import net.einsa.lotta.App
 
 class SecretKeyStore(storeName: String = "lotta-auth") {
 
-    private val masterKeyAlias = MasterKey.Builder(App.get())
+    private val masterKeyAlias = MasterKey.Builder(App.context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
 
     // Initialize EncryptedSharedPreferences
     private val sharedPreferences = EncryptedSharedPreferences.create(
-        App.get(),
+        App.context,
         storeName,
         masterKeyAlias,
         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,

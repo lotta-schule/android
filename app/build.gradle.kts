@@ -1,11 +1,12 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
+
     id("com.apollographql.apollo3") version "3.8.2"
+    id("io.sentry.android.gradle") version "4.1.1"
 
     kotlin("plugin.serialization") version "1.9.22"
-
-    id("io.sentry.android.gradle") version "4.1.1"
 }
 
 android {
@@ -80,6 +81,7 @@ dependencies {
     implementation("com.auth0:java-jwt:4.4.0")
     implementation("com.apollographql.apollo3:apollo-runtime:3.8.2")
     implementation("com.apollographql.apollo3:apollo-normalized-cache-sqlite:3.8.2")
+    implementation("com.google.firebase:firebase-messaging-ktx:23.4.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

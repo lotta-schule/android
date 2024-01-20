@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "291617339720",
+    "project_id": "lotta-222f7",
+    "storage_bucket": "lotta-222f7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:291617339720:android:d9a232f899610d15531b7d",
+        "android_client_info": {
+          "package_name": "net.einsa.lotta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1lDBk40TQ8-SZABfs7KkiBeO9DVEbuF4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

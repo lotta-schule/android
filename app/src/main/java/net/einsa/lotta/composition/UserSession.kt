@@ -1,6 +1,7 @@
 package net.einsa.lotta.composition
 
 import androidx.compose.runtime.compositionLocalOf
+import com.apollographql.apollo3.api.Optional
 import com.apollographql.apollo3.cache.normalized.FetchPolicy
 import com.apollographql.apollo3.cache.normalized.fetchPolicy
 import com.auth0.jwt.JWT
@@ -9,13 +10,17 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.einsa.lotta.AuthInfo
+import net.einsa.lotta.DeleteDeviceMutation
 import net.einsa.lotta.GetCurrentUserQuery
 import net.einsa.lotta.GetTenantQuery
 import net.einsa.lotta.LoginMutation
+import net.einsa.lotta.RegisterDeviceMutation
 import net.einsa.lotta.api.CoreApi
 import net.einsa.lotta.api.baseCacheDir
 import net.einsa.lotta.model.Tenant
 import net.einsa.lotta.model.User
+import net.einsa.lotta.service.DeviceIdentificationService
+import net.einsa.lotta.type.RegisterDeviceInput
 import net.einsa.lotta.util.SecretKeyStore
 
 class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
@@ -153,7 +158,7 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
         private set
     var api: CoreApi
         private set
-    var deviceId: Any? = null // TODO: Type this
+    var deviceId: String? = null
         private set
 
     init {
@@ -205,6 +210,34 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
                 tenant.id
             )
         )
+    }
+
+    suspend fun registerDevice(token: String) {
+        val result = api.apollo.mutation(
+            RegisterDeviceMutation(
+                RegisterDeviceInput(
+                    deviceType = Optional.present(DeviceIdentificationService.instance.getDeviceType()),
+                    modelName = Optional.present(DeviceIdentificationService.instance.getModelName()),
+                    operatingSystem = Optional.present("Android ${DeviceIdentificationService.instance.getOsVersion()}"),
+                    platformId = "android/${DeviceIdentificationService.instance.getDeviceIdentifier() ?: "0"}",
+                    pushToken = Optional.present("fcm/$token"),
+                )
+            )
+        ).execute()
+
+        result.dataAssertNoErrors.device?.id?.let { deviceId = it }
+    }
+
+    suspend fun deleteDevice() {
+        deviceId?.let { deviceId ->
+            val result = api.apollo.mutation(
+                DeleteDeviceMutation(deviceId)
+            ).execute()
+
+            if (result.data?.device?.id == deviceId) {
+                this.deviceId = null
+            }
+        }
     }
 
     override fun equals(other: Any?): Boolean {

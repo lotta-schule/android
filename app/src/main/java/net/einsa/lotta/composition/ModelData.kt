@@ -4,9 +4,13 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import io.sentry.Sentry
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import net.einsa.lotta.api.baseCacheDir
 import net.einsa.lotta.model.ID
 import net.einsa.lotta.model.Theme
+import net.einsa.lotta.service.PushNotificationService
 import net.einsa.lotta.util.UserDefaults
 
 class ModelData {
@@ -41,6 +45,7 @@ class ModelData {
                 println(e)
             }
         }
+
         userSessions.addAll(UserSession.readFromDisk())
 
         UserDefaults.instance.getTenantId()?.let { persistedTenantId ->
@@ -49,10 +54,12 @@ class ModelData {
             } else {
                 UserDefaults.instance.removeTenantId()
             }
-
-            // TODO: Setup Remote notifications
-            initialized = true
         }
+
+        if (userSessions.isNotEmpty()) {
+            PushNotificationService.instance.startReceivingNotifications()
+        }
+        initialized = true
     }
 
     fun setSession(tenantId: ID): Boolean {
@@ -81,17 +88,21 @@ class ModelData {
         }
         userSessions.add(session)
         setSession(tenantId = session.tenant.id)
-        // TODO: Start getting notifications
+
+        PushNotificationService.instance.startReceivingNotifications()
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun remove(session: UserSession) {
         session.runCatching { removeFromDisk() }
         session.removeFromKeychain()
 
         userSessions.removeIf { it.tenant.id == session.tenant.id }
 
-        session.api.resetCache()
-        // TODO: session.deleteDevices()
+        GlobalScope.launch {
+            session.api.resetCache()
+            session.deleteDevice()
+        }
     }
 
     fun removeCurrentSession() {
