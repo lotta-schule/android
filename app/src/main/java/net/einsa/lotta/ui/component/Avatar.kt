@@ -14,7 +14,7 @@ fun Avatar(
     url: String,
     modifier: Modifier = Modifier,
     size: Int = 44,
-    contentDescription: String = "Avatar",
+    contentDescription: String = "Profilbild",
 ) {
     AsyncImage(
         ImageRequest.Builder(LocalContext.current)
@@ -24,7 +24,7 @@ fun Avatar(
             .build(),
         modifier = modifier
             .clip(CircleShape),
-        contentScale = ContentScale.Crop,
+        contentScale = ContentScale.FillBounds,
         contentDescription = contentDescription
     )
 }

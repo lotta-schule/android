@@ -42,11 +42,20 @@ class ModelData {
             }
         }
         userSessions.addAll(UserSession.readFromDisk())
-        // TODO: Setup Remote notifications
-        initialized = true
+
+        UserDefaults.instance.getTenantId()?.let { persistedTenantId ->
+            if (userSessions.map { it.tenant.id }.contains(persistedTenantId)) {
+                currentSessionTenantId.value = persistedTenantId
+            } else {
+                UserDefaults.instance.removeTenantId()
+            }
+
+            // TODO: Setup Remote notifications
+            initialized = true
+        }
     }
 
-    private fun setSession(tenantId: ID): Boolean {
+    fun setSession(tenantId: ID): Boolean {
         if (currentSessionTenantId.value == tenantId) {
             return true
         }
@@ -90,9 +99,11 @@ class ModelData {
             remove(it)
         }
 
-        currentSession?.let {
-            this.currentSessionTenantId.value = it.tenant.id
-            UserDefaults.instance.setTenantId(it.tenant.id)
+        if (currentSession == null) {
+            UserDefaults.instance.removeTenantId()
+        } else {
+            this.currentSessionTenantId.value = currentSession!!.tenant.id
+            UserDefaults.instance.setTenantId(currentSession!!.tenant.id)
         }
     }
 }

@@ -4,10 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -33,19 +36,23 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import net.einsa.lotta.R
+import net.einsa.lotta.composition.LocalModelData
 import net.einsa.lotta.composition.UserSession
 import net.einsa.lotta.model.Tenant
 import net.einsa.lotta.model.TenantDescriptor
+import net.einsa.lotta.model.Theme
 import net.einsa.lotta.model.getUrl
 import net.einsa.lotta.ui.component.LottaButton
 
@@ -53,31 +60,28 @@ import net.einsa.lotta.ui.component.LottaButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateLoginSessionView(
-    createLoginSessionViewModel: CreateLoginSessionViewModel = viewModel(),
-    onLogin: (UserSession) -> Unit = {}
+    vm: CreateLoginSessionViewModel = viewModel(),
+    onLogin: (UserSession) -> Unit = {},
+    onDismiss: (() -> Unit)? = null,
 ) {
+    val focusManager = LocalFocusManager.current
+    val modelData = LocalModelData.current
+
+    val theme = remember { Theme() }
+
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var selectedTenantDescriptor by rememberSaveable() { mutableStateOf<TenantDescriptor?>(null) }
     val scope = rememberCoroutineScope()
 
     fun onSubmit() {
+        focusManager.clearFocus()
         scope.launch {
-            try {
-                val userSession = createLoginSessionViewModel.sendLoginRequest(
-                    tenant = selectedTenantDescriptor!!,
-                    email = email,
-                    password = password
-                )
-
-                println("Login successful")
-                println(userSession)
-                onLogin(userSession)
-            } catch (e: Exception) {
-                println("Login failed")
-                println(e)
-                // TODO: Show some message
-            }
+            vm.sendLoginRequest(
+                tenant = selectedTenantDescriptor!!,
+                email = email,
+                password = password
+            )?.let(onLogin)
         }
     }
 
@@ -90,6 +94,11 @@ fun CreateLoginSessionView(
                 ),
                 title = {
                     Text("Anmelden")
+                },
+                actions = {
+                    IconButton(onClick = { onDismiss?.invoke() }) {
+                        Icon(imageVector = Icons.Filled.Clear, contentDescription = "Schließen")
+                    }
                 }
             )
         },
@@ -108,7 +117,7 @@ fun CreateLoginSessionView(
                         slug = descriptor.slug,
                         title = descriptor.title,
                     ), mapOf(
-                        "width" to "200"
+                        "width" to "400",
                     )
                 )
 
@@ -120,13 +129,12 @@ fun CreateLoginSessionView(
                     contentDescription = "Logo von ${descriptor.title}",
                     placeholder = painterResource(id = R.drawable.wort_bild_marke_logo),
                     modifier = Modifier
-                        .padding(bottom = Dp(8.0F))
+                        .padding(bottom = theme.spacing)
                         .heightIn(
-                            max = Dp(175.0F)
+                            max = 200.dp
                         )
-                        .widthIn(max = Dp(200.0F))
-                        .fillMaxWidth(),
-                    contentScale = ContentScale.Inside
+                        .fillMaxWidth(0.75f),
+                    contentScale = ContentScale.Fit
                 )
             }
 
@@ -139,7 +147,10 @@ fun CreateLoginSessionView(
                 keyboardActions = KeyboardActions(
                     onDone = {
                         scope.launch {
-                            createLoginSessionViewModel.updatePossibleTenants(email)
+                            vm.updatePossibleTenants(
+                                email,
+                                excludingSessions = modelData.userSessions
+                            )
                         }
                     }
                 ),
@@ -149,7 +160,10 @@ fun CreateLoginSessionView(
                     .onKeyEvent { keyEvent ->
                         if (keyEvent.key.keyCode == Key.Enter.keyCode) {
                             scope.launch {
-                                createLoginSessionViewModel.updatePossibleTenants(email)
+                                vm.updatePossibleTenants(
+                                    email,
+                                    excludingSessions = modelData.userSessions
+                                )
                             }
                             return@onKeyEvent true
                         } else {
@@ -158,10 +172,29 @@ fun CreateLoginSessionView(
                     }
             )
 
-            if (createLoginSessionViewModel.availableTenantDescriptors.isNotEmpty() && selectedTenantDescriptor == null) {
+            if (selectedTenantDescriptor == null) {
+                LottaButton(
+                    disabled = email.isEmpty(),
+                    modifier = Modifier
+                        .padding(theme.spacing),
+                    isLoading = vm.isLoading,
+                    text = "weiter",
+                    onClick = {
+                        focusManager.clearFocus()
+                        scope.launch {
+                            vm.updatePossibleTenants(
+                                email,
+                                excludingSessions = modelData.userSessions
+                            )
+                        }
+                    }
+                )
+            }
+
+            if (vm.availableTenantDescriptors.isNotEmpty() && selectedTenantDescriptor == null) {
                 ModalBottomSheet(onDismissRequest = { email = "" }) {
                     Column {
-                        createLoginSessionViewModel.availableTenantDescriptors.forEach { tenantDescriptor ->
+                        vm.availableTenantDescriptors.forEach { tenantDescriptor ->
                             TextButton(
                                 onClick = {
                                     selectedTenantDescriptor = tenantDescriptor
@@ -180,18 +213,25 @@ fun CreateLoginSessionView(
                 UserAuthPasswordTextField(
                     password,
                     onValueChange = { password = it },
-                    onSubmit = { onSubmit() })
+                    onSubmit = { onSubmit() },
+                    modifier = Modifier
+                        .padding(horizontal = Dp(8.0F))
+                        .fillMaxWidth()
+                )
             }
 
-            LottaButton(
-                enabled = selectedTenantDescriptor != null && email.isNotEmpty() && password.isNotEmpty(),
-                modifier = Modifier
-                    .padding(Dp(8.0F)),
-                text = "Anmelden",
-                onClick = {
-                    onSubmit()
-                }
-            )
+            if (selectedTenantDescriptor != null) {
+                LottaButton(
+                    disabled = email.isEmpty() || password.isEmpty(),
+                    isLoading = vm.isLoading,
+                    modifier = Modifier
+                        .padding(theme.spacing),
+                    text = "Anmelden",
+                    onClick = {
+                        onSubmit()
+                    }
+                )
+            }
         }
 
     }
@@ -202,7 +242,8 @@ fun CreateLoginSessionView(
 fun UserAuthPasswordTextField(
     password: String,
     onValueChange: (String) -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val passwordFieldFocusRequester = remember { FocusRequester() }
 
@@ -222,9 +263,7 @@ fun UserAuthPasswordTextField(
             },
         ),
         singleLine = true,
-        modifier = Modifier
-            .padding(horizontal = Dp(8.0F))
-            .fillMaxWidth()
+        modifier = modifier
             .onKeyEvent { keyEvent ->
                 if (keyEvent.key.keyCode == Key.Enter.keyCode) {
                     onSubmit()

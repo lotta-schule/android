@@ -1,6 +1,7 @@
 package net.einsa.lotta.ui.view.login
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,22 +18,51 @@ class CreateLoginSessionViewModel : ViewModel() {
     val availableTenantDescriptors
         get() = _availableTenantDescriptors
 
-    suspend fun updatePossibleTenants(email: String) {
-        _availableTenantDescriptors.addAll(fetchPossibleTenants(email))
-        println(availableTenantDescriptors)
+    private val _isLoading = mutableStateOf(false)
+    val isLoading
+        get() = _isLoading.value
+
+    private val _error = mutableStateOf<Throwable?>(null)
+    val error
+        get() = _error.value
+
+    suspend fun updatePossibleTenants(email: String, excludingSessions: List<UserSession>) {
+        _isLoading.value = true
+        try {
+            val excludingTenantIds = excludingSessions.map { it.tenant.id }
+            _availableTenantDescriptors.addAll(
+                fetchPossibleTenants(email).filter {
+                    !excludingTenantIds.contains(it.id.toString())
+                }
+            )
+        } catch (e: Exception) {
+            _error.value = e
+        } finally {
+            _isLoading.value = false
+        }
     }
 
     suspend fun sendLoginRequest(
         tenant: TenantDescriptor,
         email: String,
         password: String
-    ): UserSession {
+    ): UserSession? {
+        _isLoading.value = true
         return withContext(Dispatchers.IO) {
-            UserSession.createFromCredentials(
-                tenantSlug = tenant.slug,
-                username = email,
-                password = password
-            )
+            try {
+                UserSession.createFromCredentials(
+                    tenantSlug = tenant.slug,
+                    username = email,
+                    password = password
+                )
+            } catch (e: Exception) {
+                _error.value = e
+                return@withContext null
+            } finally {
+                withContext(Dispatchers.Main) {
+                    _isLoading.value = false
+                }
+            }
         }
     }
 
@@ -60,7 +90,6 @@ class CreateLoginSessionViewModel : ViewModel() {
                 return@withContext result.tenants
             } else {
                 throw Exception("Could not get tenants from server")
-
             }
         }
     }

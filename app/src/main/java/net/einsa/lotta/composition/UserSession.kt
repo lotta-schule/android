@@ -18,8 +18,7 @@ import net.einsa.lotta.model.Tenant
 import net.einsa.lotta.model.User
 import net.einsa.lotta.util.SecretKeyStore
 
-class UserSession// TODO: Should get tenantId for subscriptions
-    (tenant: Tenant, authInfo: AuthInfo, user: User) {
+class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
     companion object {
         suspend fun createFromCredentials(
             tenantSlug: String,
@@ -206,6 +205,13 @@ class UserSession// TODO: Should get tenantId for subscriptions
                 tenant.id
             )
         )
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is UserSession) {
+            return false
+        }
+        return other.tenant.id == tenant.id && other.user.id == user.id
     }
 }
 

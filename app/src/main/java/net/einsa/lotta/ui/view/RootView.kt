@@ -31,7 +31,11 @@ fun RootView(vm: RootViewModel = viewModel()) {
 
     if (showDialog) {
         Dialog(
-            properties = DialogProperties(usePlatformDefaultWidth = false),
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false
+            ),
             onDismissRequest = {}
         ) {
             CreateLoginSessionView(onLogin = { userSession ->
