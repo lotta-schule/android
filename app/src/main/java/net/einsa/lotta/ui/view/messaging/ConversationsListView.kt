@@ -2,16 +2,20 @@ package net.einsa.lotta.ui.view.messaging
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
@@ -36,10 +40,17 @@ fun ConversationsList(
     }
 
     LazyColumn {
-        items(vm.conversations, key = { it.id!! }) { conversation ->
+        itemsIndexed(vm.conversations, key = { i, con -> con.id!! }) { index, conversation ->
             ConversationListItemView(
                 conversation,
-                onSelect = { onSelectConversation(conversation) })
+                onSelect = { onSelectConversation(conversation) },
+            )
+            if (index < vm.conversations.size - 1)
+                Divider(
+                    modifier = Modifier.padding(horizontal = userSession.tenant.customTheme.spacing),
+                    color = Color(userSession.tenant.customTheme.dividerColor.toArgb()),
+                    thickness = 1.dp
+                )
         }
     }
 }
@@ -56,17 +67,20 @@ fun ConversationListItemView(
         tenant = userSession.tenant
     )
 
+    val lineHeight = 54
+    val imageSize = (lineHeight - userSession.tenant.customTheme.spacing.value * 2).toInt()
+
     Row(
         modifier = Modifier
-            .height(48.dp)
-            .padding(8.dp)
+            .height(lineHeight.dp)
+            .padding(userSession.tenant.customTheme.spacing)
             .clickable { onSelect() },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        imageUrl?.let {
+        if (imageUrl != null) {
             Avatar(
                 url = imageUrl,
-                size = 88,
+                size = imageSize,
                 contentDescription = "Avatar von ${
                     ConversationUtil.getTitle(
                         conversation,
@@ -74,8 +88,10 @@ fun ConversationListItemView(
                     )
                 }",
                 modifier = Modifier
-                    .padding(end = 8.dp)
+                    .padding(userSession.tenant.customTheme.spacing)
             )
+        } else {
+            Spacer(modifier = Modifier.width(lineHeight.dp))
         }
         Text(
             ConversationUtil.getTitle(

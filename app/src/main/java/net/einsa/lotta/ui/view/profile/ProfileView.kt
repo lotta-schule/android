@@ -114,8 +114,8 @@ fun UserSessionListItem(
                 width = 1.dp,
                 brush = Brush.horizontalGradient(
                     listOf(
-                        Color(theme.disabledColor.toArgb()),
-                        Color(theme.disabledColor.toArgb())
+                        Color(theme.dividerColor.toArgb()),
+                        Color(theme.dividerColor.toArgb())
                     )
                 ),
                 shape = RoundedCornerShape(theme.borderRadius)
@@ -130,7 +130,7 @@ fun UserSessionListItem(
             .padding(defaultTheme.spacing)
             .clickable { onSelect() },
     ) {
-        UserAvatar(session.user, size = 88, modifier = Modifier.padding(end = defaultTheme.spacing))
+        UserAvatar(session.user, size = 48, modifier = Modifier.padding(end = defaultTheme.spacing))
 
         Column {
             Text(

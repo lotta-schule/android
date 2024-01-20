@@ -50,11 +50,11 @@ fun MessageRow(
         verticalAlignment = Alignment.Bottom
     ) {
         if (fromCurrentUser) {
-            Spacer(modifier = Modifier.width(88.dp))
+            Spacer(modifier = Modifier.width(48.dp))
         } else {
             UserAvatar(
                 user = message.user!!,
-                size = 88,
+                size = 48,
                 modifier = Modifier.padding(theme.spacing)
             )
         }
@@ -71,11 +71,11 @@ fun MessageRow(
             )
         }
         if (!fromCurrentUser) {
-            Spacer(modifier = Modifier.width(88.dp))
+            Spacer(modifier = Modifier.width(48.dp))
         } else {
             UserAvatar(
                 user = message.user!!,
-                size = 88,
+                size = 48,
                 modifier = Modifier
                     .padding(theme.spacing)
             )
