@@ -18,9 +18,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -30,7 +33,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import kotlinx.coroutines.launch
 import net.einsa.lotta.composition.LocalModelData
+import net.einsa.lotta.composition.LocalUserSession
 import net.einsa.lotta.ui.view.messaging.ConversationView
 import net.einsa.lotta.ui.view.messaging.MessagingView
 import net.einsa.lotta.ui.view.profile.ProfileView
@@ -52,9 +57,12 @@ enum class MainScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainView() {
+fun MainView(vm: MainViewModel = viewModel()) {
     val navController = rememberNavController()
+    val scope = rememberCoroutineScope()
     val backStackEntry = navController.currentBackStackEntryAsState()
+
+    val session = LocalUserSession.current
 
     val currentScreen =
         MainScreen.entries.find { it.route == backStackEntry.value?.destination?.route }
@@ -65,6 +73,15 @@ fun MainView() {
 
     val canCreateMessage = currentScreen.route == MainScreen.CONVERSATIONS.route
 
+    DisposableEffect(session) {
+        val job = scope.launch {
+            vm.subscribeToMessages(session)
+        }
+
+        onDispose {
+            job.cancel()
+        }
+    }
 
     Scaffold(
         topBar = {

@@ -11,9 +11,9 @@ sealed class ConversationUtil {
             excludingUserId: String,
             tenant: Tenant
         ): String? {
-            return conversation.users?.find { it.id != excludingUserId }?.avatarImageFile?.id?.let { im ->
-                im.getUrl(tenant)
-            }
+            return conversation.users?.find { it.id != excludingUserId }?.avatarImageFile?.id?.getUrl(
+                tenant
+            )
         }
 
         fun getTitle(
@@ -21,7 +21,7 @@ sealed class ConversationUtil {
             excludingUserId: String
         ): String {
             return conversation.users?.find { it.id != excludingUserId }?.let { user ->
-                user.name ?: user.nickname // TODO: Make a util to show name correctly
+                UserUtil.getVisibleName(user)
             } ?: conversation.groups?.firstOrNull()?.name ?: "?"
         }
     }

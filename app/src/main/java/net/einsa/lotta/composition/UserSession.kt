@@ -158,11 +158,10 @@ class UserSession// TODO: Should get tenantId for subscriptions
         private set
 
     init {
-        this.api = CoreApi(tenantSlug = tenant.slug, loginSession = authInfo)
+        this.api = CoreApi(tenantSlug = tenant.slug, tenantId = tenant.id, loginSession = authInfo)
     }
 
     suspend fun refetchUserData() {
-        // TODO: Make sure apollo does not hit the cache on this one
         val userGraphqlResponse =
             api.apollo.query(GetCurrentUserQuery()).fetchPolicy(FetchPolicy.NetworkFirst)
                 .execute()

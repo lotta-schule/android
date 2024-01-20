@@ -2,6 +2,10 @@ package net.einsa.lotta.api
 
 import android.content.Context
 import com.apollographql.apollo3.ApolloClient
+import com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory
+import com.apollographql.apollo3.cache.normalized.normalizedCache
+import com.apollographql.apollo3.cache.normalized.sql.SqlNormalizedCacheFactory
+import com.apollographql.apollo3.network.ws.GraphQLWsProtocol
 import net.einsa.lotta.App
 import net.einsa.lotta.AuthInfo
 import java.io.File
@@ -23,7 +27,7 @@ class CoreApi() {
     var apollo: ApolloClient
         private set
 
-    var cacheUrl: File? = null
+    var cacheFile: File? = null
 
     companion object {
         fun getCacheFile(tenantId: String): File {
@@ -35,12 +39,18 @@ class CoreApi() {
         this.apollo =
             ApolloClient.Builder()
                 .httpServerUrl("$LOTTA_API_HTTP_URL/api")
+                .normalizedCache(
+                    MemoryCacheFactory(maxSizeBytes = 25 * 1024 * 1024)
+                )
                 .build()
     }
 
     constructor(tenantSlug: String, loginSession: AuthInfo? = null) : this() {
         this.apollo =
             ApolloClient.Builder()
+                .normalizedCache(
+                    MemoryCacheFactory(maxSizeBytes = 25 * 1024 * 1024)
+                )
                 .httpServerUrl("$LOTTA_API_HTTP_URL/api")
                 .addHttpHeader("Tenant", "slug:$tenantSlug")
                 .addHttpInterceptor(AuthorizationInterceptor(loginSession))
@@ -48,8 +58,34 @@ class CoreApi() {
                 .build()
     }
 
+    constructor(tenantSlug: String, tenantId: String, loginSession: AuthInfo) : this() {
+        cacheFile = getCacheFile(tenantId)
+
+        val store = SqlNormalizedCacheFactory(cacheFile!!.absolutePath)
+
+        apollo =
+            ApolloClient.Builder()
+                .normalizedCache(store)
+                .httpServerUrl("$LOTTA_API_HTTP_URL/api")
+                .addHttpHeader("Tenant", "slug:$tenantSlug")
+                .addHttpInterceptor(AuthorizationInterceptor(loginSession))
+                .addHttpInterceptor(RefreshTokenInterceptor(loginSession))
+                .wsProtocol(
+                    GraphQLWsProtocol.Factory(
+                        connectionPayload = {
+                            mapOf(
+                                "tid" to tenantId,
+                                "token" to loginSession.accessToken?.token
+                            )
+                        },
+                    )
+                )
+                .webSocketServerUrl(LOTTA_API_WEBSOCKET_URL)
+                .build()
+    }
+
     fun resetCache() {
-        cacheUrl?.let {
+        cacheFile?.let {
             it.runCatching { delete() }
         }
     }

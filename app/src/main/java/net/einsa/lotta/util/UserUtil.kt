@@ -1,6 +1,7 @@
 package net.einsa.lotta.util
 
 import net.einsa.lotta.GetConversationQuery
+import net.einsa.lotta.GetConversationsQuery
 import net.einsa.lotta.model.User
 
 class UserUtil {
@@ -12,6 +13,18 @@ class UserUtil {
 
             return if (user.nickname.isNullOrBlank()) {
                 user.name!!
+            } else {
+                "${user.name} (${user.nickname})"
+            }
+        }
+
+        fun getVisibleName(user: GetConversationsQuery.User): String {
+            if (user.name.isNullOrBlank()) {
+                return user.nickname ?: "?"
+            }
+
+            return if (user.nickname.isNullOrBlank()) {
+                user.name
             } else {
                 "${user.name} (${user.nickname})"
             }
