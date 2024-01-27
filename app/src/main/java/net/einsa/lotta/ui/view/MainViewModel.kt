@@ -44,7 +44,7 @@ class MainViewModel() : ViewModel() {
                                     groups = message.conversation?.groups?.map { group ->
                                         GetConversationsQuery.Group(
                                             id = group.id,
-                                            name = null, // TODO: Add name to group
+                                            name = group.name,
                                         )
                                     },
                                     users = message.conversation?.users?.map { user ->
