@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -55,6 +58,7 @@ fun ConversationsList(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationListItemView(
     conversation: GetConversationsQuery.Conversation,
@@ -93,11 +97,32 @@ fun ConversationListItemView(
         } else {
             Spacer(modifier = Modifier.width(lineHeight.dp))
         }
-        Text(
-            ConversationUtil.getTitle(
-                conversation = conversation,
-                excludingUserId = userSession.user.id
+        if ((conversation.unreadMessages ?: 0) > 0) {
+            BadgedBox(
+                badge = {
+                    Badge(
+                        containerColor = Color(userSession.tenant.customTheme.primaryColor.toArgb()),
+                        contentColor = Color(userSession.tenant.customTheme.primaryContrastTextColor.toArgb()),
+                    ) {
+                        Text(
+                            conversation.unreadMessages.toString(),
+                        )
+                    }
+                }) {
+                Text(
+                    ConversationUtil.getTitle(
+                        conversation = conversation,
+                        excludingUserId = userSession.user.id
+                    )
+                )
+            }
+        } else {
+            Text(
+                ConversationUtil.getTitle(
+                    conversation = conversation,
+                    excludingUserId = userSession.user.id
+                )
             )
-        )
+        }
     }
 }

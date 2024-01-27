@@ -7,6 +7,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -83,6 +85,16 @@ fun MainView(vm: MainViewModel = viewModel()) {
         }
     }
 
+    DisposableEffect(session) {
+        val job = scope.launch {
+            vm.watchNewMessageCount(session)
+        }
+
+        onDispose {
+            job.cancel()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,6 +106,7 @@ fun MainView(vm: MainViewModel = viewModel()) {
         },
         bottomBar = {
             BottomNavigationBar(
+                newMessageCount = vm.newMessageCount,
                 currentNavDestination = backStackEntry.value?.destination,
                 onSelect = { navController.navigate(it.route) }
             )
@@ -163,39 +176,62 @@ fun TopAppBar(title: String, onCreateMessage: (() -> Unit)?, onNavigateBack: (()
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable()
 fun BottomNavigationBar(
+    newMessageCount: Int,
     onSelect: (MainScreen) -> Unit,
     currentNavDestination: NavDestination? = null
 ) {
     val modelData = LocalModelData.current
 
+    val theme = modelData.theme
+
     val colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = Color(modelData.theme.primaryColor.toArgb()),
-        selectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
+        selectedIconColor = Color(theme.primaryColor.toArgb()),
+        selectedTextColor = Color(theme.navigationContrastTextColor.toArgb()),
         indicatorColor = ColorUtils.blendARGB(
-            modelData.theme.navigationBackgroundColor.toArgb(),
-            modelData.theme.primaryColor.toArgb(),
+            theme.navigationBackgroundColor.toArgb(),
+            theme.primaryColor.toArgb(),
             0.1f
         ).let {
             Color(it)
         },
-        unselectedIconColor = Color(modelData.theme.navigationContrastTextColor.toArgb()),
-        unselectedTextColor = Color(modelData.theme.navigationContrastTextColor.toArgb())
+        unselectedIconColor = Color(theme.navigationContrastTextColor.toArgb()),
+        unselectedTextColor = Color(theme.navigationContrastTextColor.toArgb())
     )
 
     NavigationBar(
-        containerColor = Color(modelData.theme.navigationBackgroundColor.toArgb()),
+        containerColor = Color(theme.navigationBackgroundColor.toArgb()),
     ) {
         NavigationBarItem(
             selected = currentNavDestination?.hierarchy?.any { it.route == MainScreen.MESSAGING.route }
                 ?: false,
             onClick = { onSelect(MainScreen.MESSAGING) },
             icon = {
-                Icon(
-                    imageVector = Icons.Default.MailOutline,
-                    contentDescription = null
-                )
+                if (newMessageCount == 0) {
+                    Icon(
+                        imageVector = Icons.Default.MailOutline,
+                        contentDescription = null
+                    )
+                } else {
+                    BadgedBox(
+                        badge = {
+                            Badge(
+                                containerColor = Color(theme.primaryColor.toArgb()),
+                                contentColor = Color(theme.primaryContrastTextColor.toArgb()),
+                            ) {
+                                Text(
+                                    newMessageCount.toString(),
+                                )
+                            }
+                        }) {
+                        Icon(
+                            imageVector = Icons.Default.MailOutline,
+                            contentDescription = null
+                        )
+                    }
+                }
             },
             label = { MainScreen.MESSAGING.title?.let { Text(it) } },
             colors = colors

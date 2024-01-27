@@ -3,6 +3,7 @@ package net.einsa.lotta.composition
 import androidx.compose.runtime.compositionLocalOf
 import com.apollographql.apollo3.api.Optional
 import com.apollographql.apollo3.cache.normalized.FetchPolicy
+import com.apollographql.apollo3.cache.normalized.apolloStore
 import com.apollographql.apollo3.cache.normalized.fetchPolicy
 import com.auth0.jwt.JWT
 import io.sentry.Sentry
@@ -11,6 +12,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.einsa.lotta.AuthInfo
 import net.einsa.lotta.DeleteDeviceMutation
+import net.einsa.lotta.GetConversationQuery
+import net.einsa.lotta.GetConversationsQuery
 import net.einsa.lotta.GetCurrentUserQuery
 import net.einsa.lotta.GetTenantQuery
 import net.einsa.lotta.LoginMutation
@@ -171,16 +174,34 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
                 .execute()
         val user = userGraphqlResponse.dataAssertNoErrors.currentUser!!
         this.user = User.from(user, tenant = tenant)
-
-        // Todo: Register for remote notifications
     }
 
     suspend fun refetchTenantData() {
         val tenantGraphqlResponse = api.apollo.query(GetTenantQuery()).execute()
         val tenant = tenantGraphqlResponse.dataAssertNoErrors.tenant!!
         this.tenant = Tenant.from(tenant)
+    }
 
-        // Todo: Register for remote notifications
+    suspend fun forceReloadConversations(clearingCache: Boolean = false) {
+        if (clearingCache) {
+            api.apollo.apolloStore.clearAll()
+        }
+        api.apollo.query(GetConversationsQuery()).fetchPolicy(FetchPolicy.NetworkOnly).execute()
+    }
+
+    suspend fun forceReloadConversation(conversationId: String) {
+        val result = api.apollo.query(
+            GetConversationQuery(
+                id = conversationId,
+                markAsRead = Optional.present(false)
+            )
+        )
+            .fetchPolicy(FetchPolicy.NetworkOnly).execute()
+
+        api.apollo.apolloStore.writeOperation(
+            GetConversationQuery(id = conversationId),
+            result.dataAssertNoErrors
+        )
     }
 
     fun writeToDisk() {
