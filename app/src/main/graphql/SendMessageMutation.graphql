@@ -21,9 +21,15 @@ mutation SendMessage($message: MessageInput!) {
       updatedAt
       users {
         id
+        name
+        nickname
+        avatarImageFile {
+          id
+        }
       }
       groups {
         id
+        name
       }
       messages {
         id

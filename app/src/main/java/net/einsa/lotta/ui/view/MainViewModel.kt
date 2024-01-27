@@ -1,11 +1,18 @@
-package net.einsa.lotta
+package net.einsa.lotta.ui.view
 
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.ViewModel
 import com.apollographql.apollo3.cache.normalized.apolloStore
 import com.apollographql.apollo3.cache.normalized.watch
+import net.einsa.lotta.GetConversationQuery
+import net.einsa.lotta.GetConversationsQuery
+import net.einsa.lotta.ReceiveMessageSubscription
+import net.einsa.lotta.SearchUsersQuery
 import net.einsa.lotta.composition.UserSession
+import net.einsa.lotta.model.Group
+import net.einsa.lotta.ui.view.messaging.NewMessageDestination
+import net.einsa.lotta.util.UserUtil
 
 class MainViewModel() : ViewModel() {
     private val _newMessageCount = mutableIntStateOf(0)
@@ -56,7 +63,7 @@ class MainViewModel() : ViewModel() {
                                         )
                                     )
                                 )
-                            )
+                            ).apply { addAll(conversations?.filterNotNull() ?: emptyList()) }
                         } else {
                             conversations!!.map {
                                 if (it?.id == message.conversation?.id) {
@@ -157,6 +164,60 @@ class MainViewModel() : ViewModel() {
             response.data?.conversations?.mapNotNull { it?.unreadMessages }
                 ?.reduce { acc, next -> acc + next }
                 ?.let { _newMessageCount.intValue = it }
+        }
+    }
+
+    suspend fun onCreateNewMessage(
+        destination: NewMessageDestination,
+        user: SearchUsersQuery.User?,
+        group: Group?,
+        session: UserSession
+    ): String {
+        when (destination) {
+            NewMessageDestination.GROUP -> {
+                runCatching {
+                    session.api.apollo.apolloStore
+                        .readOperation(GetConversationsQuery())
+                        .conversations?.find { it?.groups?.firstOrNull()?.id == group?.id }
+                        ?.let { conversation ->
+                            return@onCreateNewMessage MainScreen.CONVERSATION.route.replace(
+                                "{conversationId}",
+                                conversation.id!!,
+                            ).replace(
+                                "{title}",
+                                conversation.groups?.firstOrNull()?.name ?: ""
+                            )
+                        }
+                }
+                return MainScreen.NEW_CONVERSATION.route
+                    .replace("{title}", group!!.name)
+                    .replace("{groupId}", group.id)
+                    .replace("&userId={userId}", "")
+            }
+
+            NewMessageDestination.USER -> {
+                runCatching {
+                    session.api.apollo.apolloStore.readOperation(GetConversationsQuery())
+                        .conversations?.find { conversation ->
+                            conversation?.users?.mapNotNull { it.id }?.contains(user!!.id!!)
+                                ?: false
+                        }?.let { conversation ->
+                            return@onCreateNewMessage MainScreen.CONVERSATION.route.replace(
+                                "{conversationId}",
+                                conversation.id!!,
+                            ).replace(
+                                "{title}",
+                                UserUtil.getVisibleName(user!!)
+                            )
+                        }
+                }
+                return MainScreen.NEW_CONVERSATION.route
+                    .replace(
+                        "{title}", UserUtil.getVisibleName(user!!)
+                    )
+                    .replace("{userId}", user.id!!)
+                    .replace("&groupId={groupId}", "")
+            }
         }
     }
 }

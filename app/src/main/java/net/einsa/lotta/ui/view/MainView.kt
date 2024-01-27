@@ -1,4 +1,4 @@
-package net.einsa.lotta
+package net.einsa.lotta.ui.view
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,10 +21,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NamedNavArgument
@@ -40,7 +45,9 @@ import kotlinx.coroutines.launch
 import net.einsa.lotta.composition.LocalModelData
 import net.einsa.lotta.composition.LocalUserSession
 import net.einsa.lotta.ui.view.messaging.ConversationView
+import net.einsa.lotta.ui.view.messaging.CreateConversationView
 import net.einsa.lotta.ui.view.messaging.MessagingView
+import net.einsa.lotta.ui.view.messaging.NewConversationView
 import net.einsa.lotta.ui.view.profile.ProfileView
 
 enum class MainScreen(
@@ -51,11 +58,18 @@ enum class MainScreen(
     MESSAGING("messages", title = "Nachrichten"),
     PROFILE("profile", title = "Profil"),
     CONVERSATIONS("messages/all", title = "Nachrichten"),
+    NEW_CONVERSATION(
+        "messages/new?title={title}&groupId={groupId}&userId={userId}", arguments = listOf(
+            navArgument("title") { nullable = true },
+            navArgument("groupId") { nullable = true },
+            navArgument("userId") { nullable = true },
+        )
+    ),
     CONVERSATION(
         "messages/{conversationId}?title={title}", arguments = listOf(
             navArgument("title") { nullable = true }
         )
-    )
+    ),
 }
 
 @Composable
@@ -63,6 +77,7 @@ fun MainView(vm: MainViewModel = viewModel()) {
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
     val backStackEntry = navController.currentBackStackEntryAsState()
+    var showNewConversationDialog by remember { mutableStateOf(false) }
 
     val session = LocalUserSession.current
 
@@ -95,11 +110,23 @@ fun MainView(vm: MainViewModel = viewModel()) {
         }
     }
 
+    if (showNewConversationDialog) {
+        Dialog(onDismissRequest = { showNewConversationDialog = false }) {
+            CreateConversationView { destination, user, group ->
+                showNewConversationDialog = false
+                vm.onCreateNewMessage(destination, user, group, session)
+                    ?.let(navController::navigate)
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 onNavigateBack = if (!canNavigateBack) null else ({ navController.popBackStack() }),
-                onCreateMessage = if (!canCreateMessage) null else ({}),
+                onCreateMessage = if (!canCreateMessage) null else ({
+                    showNewConversationDialog = true
+                }),
                 title = navController.currentBackStackEntry?.arguments?.getString("title")
                     ?: currentScreen.title ?: currentScreen.name
             )
@@ -125,6 +152,15 @@ fun MainView(vm: MainViewModel = viewModel()) {
             ) {
                 composable(route = MainScreen.CONVERSATIONS.route) {
                     MessagingView(navController = navController)
+                }
+                composable(route = MainScreen.NEW_CONVERSATION.route) {
+                    val userId = it.arguments?.getString("userId")
+                    val groupId = it.arguments?.getString("groupId")
+                    NewConversationView(userId, groupId) { path ->
+                        navController.navigate(path) {
+                            popUpTo(MainScreen.NEW_CONVERSATION.route) { inclusive = true }
+                        }
+                    }
                 }
                 composable(route = MainScreen.CONVERSATION.route) {
                     val conversationId = it.arguments?.getString("conversationId")

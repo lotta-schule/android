@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import net.einsa.lotta.SendMessageMutation
 import net.einsa.lotta.composition.LocalUserSession
 import net.einsa.lotta.model.ID
 
@@ -36,7 +37,8 @@ fun MessageInputView(
     userId: ID?,
     groupId: ID?,
     modifier: Modifier = Modifier,
-    vm: MessageInputViewModel = viewModel()
+    vm: MessageInputViewModel = viewModel(),
+    onSent: (message: SendMessageMutation.Message) -> Unit = {},
 ) {
     val session = LocalUserSession.current
     val focusManager = LocalFocusManager.current
@@ -65,15 +67,20 @@ fun MessageInputView(
                 .weight(1f)
                 .onKeyEvent { keyEvent ->
                     if (keyEvent.key.keyCode == Key.Enter.keyCode && !keyEvent.isShiftPressed) {
+                        val messageContent = content.trimEnd('\n')
                         scope.launch {
                             focusManager.clearFocus()
-                            vm.sendMessage(
-                                content,
-                                session = session,
-                                userId = userId,
-                                groupId = groupId
-                            )
-                            content = ""
+                            vm
+                                .sendMessage(
+                                    messageContent,
+                                    session = session,
+                                    userId = userId,
+                                    groupId = groupId
+                                )
+                                ?.let {
+                                    content = ""
+                                    onSent(it)
+                                }
                         }
 
                         return@onKeyEvent true

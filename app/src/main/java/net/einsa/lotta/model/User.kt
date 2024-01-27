@@ -5,14 +5,14 @@ import kotlinx.serialization.Serializable
 import net.einsa.lotta.GetCurrentUserQuery
 import io.sentry.protocol.User as SentryUser
 
-@Serializable()
+@Serializable
 data class User(
     var tenant: Tenant,
     var id: ID,
     var name: String? = null,
     var nickname: String? = null,
     var email: String? = null,
-    // TODO: var groups: List<Group>? = null,
+    var groups: List<Group> = emptyList(),
     var avatarImageFileId: String? = null,
 ) {
     companion object {
@@ -22,6 +22,8 @@ data class User(
                 id = userData.id!!,
                 name = userData.name,
                 nickname = userData.nickname,
+                groups = userData.groups?.mapNotNull { it?.let { Group.from(it) } }
+                    ?: emptyList(),
                 email = userData.email,
                 avatarImageFileId = userData.avatarImageFile?.id,
             )

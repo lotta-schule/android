@@ -11,7 +11,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import net.einsa.lotta.MainView
 import net.einsa.lotta.composition.LocalUserSession
 import net.einsa.lotta.composition.UserSession
 import net.einsa.lotta.model.getUrl

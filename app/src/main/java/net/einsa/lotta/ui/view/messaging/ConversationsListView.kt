@@ -3,6 +3,7 @@ package net.einsa.lotta.ui.view.messaging
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -78,6 +79,7 @@ fun ConversationListItemView(
         modifier = Modifier
             .height(lineHeight.dp)
             .padding(userSession.tenant.customTheme.spacing)
+            .fillMaxWidth()
             .clickable { onSelect() },
         verticalAlignment = Alignment.CenterVertically
     ) {
