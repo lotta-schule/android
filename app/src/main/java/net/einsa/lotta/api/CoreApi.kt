@@ -8,10 +8,12 @@ import com.apollographql.apollo3.cache.normalized.sql.SqlNormalizedCacheFactory
 import com.apollographql.apollo3.network.ws.GraphQLWsProtocol
 import net.einsa.lotta.App
 import net.einsa.lotta.AuthInfo
+import net.einsa.lotta.BuildConfig
 import java.io.File
 
-const val LOTTA_API_HOST = "core.lotta.schule"
-const val USE_SECURE_CONNECTION = true
+const val LOTTA_API_HOST = BuildConfig.API_HOST
+val USE_SECURE_CONNECTION: Boolean = BuildConfig.USE_SECURE_CONNECTION
+
 val LOTTA_API_HTTP_URL =
     (if (USE_SECURE_CONNECTION) "https" else "http") + "://$LOTTA_API_HOST"
 val LOTTA_API_WEBSOCKET_URL =

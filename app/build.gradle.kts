@@ -1,3 +1,6 @@
+import java.net.Inet4Address
+import java.net.NetworkInterface
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -7,6 +10,18 @@ plugins {
     id("io.sentry.android.gradle") version "4.1.1"
 
     kotlin("plugin.serialization") version "1.9.22"
+}
+
+fun getLocalIPv4(): List<String> {
+    return NetworkInterface.getNetworkInterfaces()
+        .toList()
+        .filter { it.isUp && !it.isLoopback && !it.isVirtual }
+        .flatMap { networkInterface ->
+            networkInterface.inetAddresses
+                .toList()
+                .filter { !it.isLoopbackAddress && it is Inet4Address }
+                .map { println(it.hostAddress); it.hostAddress }
+        }
 }
 
 android {
@@ -27,14 +42,44 @@ android {
     }
 
     buildTypes {
+        release { }
+        create("staging") {
+            applicationIdSuffix = ".staging"
+
+            buildConfigField("String", "API_HOST", "\"core.staging.lotta.schule\"")
+            buildConfigField("Boolean", "USE_SECURE_CONNECTION", "true")
+        }
+        create("prod") {
+        }
+    }
+
+    buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "API_HOST", "\"core.lotta.schule\"")
+            buildConfigField("Boolean", "USE_SECURE_CONNECTION", "true")
+        }
+        debug {
+            applicationIdSuffix = ".debug"
+            buildConfigField(
+                "String",
+                "API_HOST",
+                "\"${getLocalIPv4().firstOrNull() ?: "localhost"}:4000\""
+            )
+            buildConfigField("Boolean", "USE_SECURE_CONNECTION", "false")
+        }
+        getByName("staging") {
+            applicationIdSuffix = ".staging"
+
+            buildConfigField("String", "API_HOST", "\"core.staging.lotta.schule\"")
+            buildConfigField("Boolean", "USE_SECURE_CONNECTION", "true")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -44,6 +89,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
