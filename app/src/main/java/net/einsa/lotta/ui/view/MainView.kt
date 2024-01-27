@@ -115,7 +115,7 @@ fun MainView(vm: MainViewModel = viewModel()) {
             CreateConversationView { destination, user, group ->
                 showNewConversationDialog = false
                 vm.onCreateNewMessage(destination, user, group, session)
-                    ?.let(navController::navigate)
+                    .let(navController::navigate)
             }
         }
     }

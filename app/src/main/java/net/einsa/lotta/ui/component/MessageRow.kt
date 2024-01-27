@@ -50,7 +50,7 @@ fun MessageRow(
         verticalAlignment = Alignment.Bottom
     ) {
         if (fromCurrentUser) {
-            Spacer(modifier = Modifier.width(48.dp))
+            Spacer(modifier = Modifier.width(48.dp - theme.spacing * 2))
         } else {
             UserAvatar(
                 user = message.user!!,
@@ -58,12 +58,16 @@ fun MessageRow(
                 modifier = Modifier.padding(theme.spacing)
             )
         }
-        Column(horizontalAlignment = if (fromCurrentUser) Alignment.End else Alignment.Start) {
+        Column(
+            horizontalAlignment = if (fromCurrentUser) Alignment.End else Alignment.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
             val userName = message.user?.let { UserUtil.getVisibleName(message.user) } ?: "?"
             MessageBubble(
                 message,
-                fromCurrentUser = fromCurrentUser,
-                modifier = Modifier.fillMaxWidth(0.8f)
+                fromCurrentUser = fromCurrentUser
             )
             Text(
                 userName + ", " + formattedDateLine(),
@@ -71,7 +75,7 @@ fun MessageRow(
             )
         }
         if (!fromCurrentUser) {
-            Spacer(modifier = Modifier.width(48.dp))
+            Spacer(modifier = Modifier.width(48.dp - theme.spacing * 2))
         } else {
             UserAvatar(
                 user = message.user!!,

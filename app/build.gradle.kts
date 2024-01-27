@@ -39,17 +39,35 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField("String", "API_HOST", "\"core.lotta.schule\"")
+        buildConfigField("Boolean", "USE_SECURE_CONNECTION", "true")
     }
 
-    buildTypes {
-        release { }
+    flavorDimensions += "endpoint"
+    productFlavors {
+        create("production") {
+            dimension = "endpoint"
+            isDefault = true
+        }
         create("staging") {
+            dimension = "endpoint"
             applicationIdSuffix = ".staging"
 
             buildConfigField("String", "API_HOST", "\"core.staging.lotta.schule\"")
             buildConfigField("Boolean", "USE_SECURE_CONNECTION", "true")
         }
-        create("prod") {
+
+        create("local") {
+            dimension = "endpoint"
+            applicationIdSuffix = ".local"
+
+            buildConfigField(
+                "String",
+                "API_HOST",
+                "\"${getLocalIPv4().firstOrNull() ?: "localhost"}:4000\""
+            )
+            buildConfigField("Boolean", "USE_SECURE_CONNECTION", "false")
         }
     }
 
@@ -60,26 +78,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "API_HOST", "\"core.lotta.schule\"")
-            buildConfigField("Boolean", "USE_SECURE_CONNECTION", "true")
-        }
-        debug {
-            applicationIdSuffix = ".debug"
-            buildConfigField(
-                "String",
-                "API_HOST",
-                "\"${getLocalIPv4().firstOrNull() ?: "localhost"}:4000\""
-            )
-            buildConfigField("Boolean", "USE_SECURE_CONNECTION", "false")
-        }
-        getByName("staging") {
-            applicationIdSuffix = ".staging"
-
-            buildConfigField("String", "API_HOST", "\"core.staging.lotta.schule\"")
-            buildConfigField("Boolean", "USE_SECURE_CONNECTION", "true")
         }
     }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
