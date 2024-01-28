@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -41,7 +42,11 @@ enum class NewMessageDestination {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateConversationView(onSelect: suspend (NewMessageDestination, user: SearchUsersQuery.User?, group: Group?) -> Unit) {
+fun CreateConversationView(
+    onDismiss: () -> Unit,
+    onSelect: suspend (NewMessageDestination, user: SearchUsersQuery.User?, group: Group?) -> Unit,
+    modifier: Modifier = Modifier
+) {
     var selectedNewMessageType by remember { mutableStateOf<NewMessageDestination?>(null) }
     val scope = rememberCoroutineScope()
     val session = LocalUserSession.current
@@ -49,6 +54,7 @@ fun CreateConversationView(onSelect: suspend (NewMessageDestination, user: Searc
     val currentUser = session.user
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 {
@@ -73,6 +79,11 @@ fun CreateConversationView(onSelect: suspend (NewMessageDestination, user: Searc
                                 contentDescription = "Zurück"
                             )
                         }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onDismiss.invoke() }) {
+                        Icon(imageVector = Icons.Filled.Clear, contentDescription = "Schließen")
                     }
                 }
             )

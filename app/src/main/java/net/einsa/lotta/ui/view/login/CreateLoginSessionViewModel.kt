@@ -35,6 +35,10 @@ class CreateLoginSessionViewModel : ViewModel() {
                     !excludingTenantIds.contains(it.id.toString())
                 }
             )
+
+            if (_availableTenantDescriptors.isEmpty()) {
+                throw Exception("Benutzer ist in keiner Schule registriert.")
+            }
         } catch (e: Exception) {
             _error.value = e
         } finally {
@@ -78,7 +82,7 @@ class CreateLoginSessionViewModel : ViewModel() {
             val response = OkHttpClient().newCall(request).execute()
 
             if (response.body == null) {
-                throw Exception("Could not get tenants from server")
+                throw Exception("Schuldaten konnten nicht geladen werden.")
             }
 
             val jsonString = response.body!!.string()
@@ -89,7 +93,7 @@ class CreateLoginSessionViewModel : ViewModel() {
             if (result.tenants != null) {
                 return@withContext result.tenants
             } else {
-                throw Exception("Could not get tenants from server")
+                throw Exception("Schuldaten konnten nicht geladen werden.")
             }
         }
     }

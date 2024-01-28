@@ -1,5 +1,6 @@
 package net.einsa.lotta.ui.view.login
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -11,10 +12,12 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -31,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
@@ -60,6 +64,7 @@ import net.einsa.lotta.ui.component.LottaButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateLoginSessionView(
+    modifier: Modifier = Modifier,
     vm: CreateLoginSessionViewModel = viewModel(),
     onLogin: (UserSession) -> Unit = {},
     onDismiss: (() -> Unit)? = null,
@@ -72,6 +77,7 @@ fun CreateLoginSessionView(
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var selectedTenantDescriptor by rememberSaveable() { mutableStateOf<TenantDescriptor?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     fun onSubmit() {
@@ -85,22 +91,39 @@ fun CreateLoginSessionView(
         }
     }
 
+    LaunchedEffect(key1 = vm.error) {
+        vm.error?.let { error ->
+            snackbarHostState.showSnackbar(
+                error.message ?: "Ein Fehler ist aufgetreten.",
+                withDismissAction = true,
+                duration = SnackbarDuration.Long
+            )
+        }
+    }
+
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 colors = topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    containerColor = Color(theme.boxBackgroundColor.toArgb()),
+                    titleContentColor = Color(theme.textColor.toArgb()),
                 ),
                 title = {
                     Text("Anmelden")
                 },
                 actions = {
-                    IconButton(onClick = { onDismiss?.invoke() }) {
-                        Icon(imageVector = Icons.Filled.Clear, contentDescription = "Schließen")
+                    onDismiss?.let {
+                        IconButton(onClick = { it.invoke() }) {
+                            Icon(imageVector = Icons.Filled.Clear, contentDescription = "Schließen")
+                        }
                     }
                 }
             )
+        },
+        containerColor = Color(theme.boxBackgroundColor.toArgb()),
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         },
     ) { innerPadding ->
 
@@ -108,6 +131,7 @@ fun CreateLoginSessionView(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .padding(innerPadding)
+                .background(Color(theme.boxBackgroundColor.toArgb()))
         ) {
             selectedTenantDescriptor?.logoImageFileId?.let { logoImageFileId ->
                 val descriptor = selectedTenantDescriptor!!

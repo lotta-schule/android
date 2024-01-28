@@ -1,5 +1,6 @@
 package net.einsa.lotta.ui.view
 
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -112,11 +113,14 @@ fun MainView(vm: MainViewModel = viewModel()) {
 
     if (showNewConversationDialog) {
         Dialog(onDismissRequest = { showNewConversationDialog = false }) {
-            CreateConversationView { destination, user, group ->
-                showNewConversationDialog = false
-                vm.onCreateNewMessage(destination, user, group, session)
-                    .let(navController::navigate)
-            }
+            CreateConversationView(
+                modifier = Modifier.fillMaxHeight(.75f),
+                onDismiss = { showNewConversationDialog = false },
+                onSelect = { destination, user, group ->
+                    showNewConversationDialog = false
+                    vm.onCreateNewMessage(destination, user, group, session)
+                        .let(navController::navigate)
+                })
         }
     }
 
