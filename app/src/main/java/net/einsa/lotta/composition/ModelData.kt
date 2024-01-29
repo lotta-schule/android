@@ -9,7 +9,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.einsa.lotta.api.baseCacheDir
 import net.einsa.lotta.model.ID
-import net.einsa.lotta.model.Theme
 import net.einsa.lotta.service.PushNotificationService
 import net.einsa.lotta.util.UserDefaults
 
@@ -26,14 +25,6 @@ class ModelData {
 
     var initialized = false
         private set
-
-    val theme: Theme
-        get() = currentSession?.tenant?.customTheme ?: Theme()
-
-    val currentSession: UserSession?
-        get() = userSessions.find {
-            it.tenant.id == currentSessionTenantId.value
-        } ?: userSessions.firstOrNull()
 
     suspend fun initializeSessions() {
         if (!baseCacheDir.exists()) {
@@ -106,15 +97,21 @@ class ModelData {
     }
 
     fun removeCurrentSession() {
+        val currentSession = userSessions.find {
+            it.tenant.id == currentSessionTenantId.value
+        } ?: userSessions.firstOrNull()
+
         currentSession?.let {
             remove(it)
         }
 
-        if (currentSession == null) {
+        val nextSession = userSessions.firstOrNull()
+
+        if (nextSession == null) {
             UserDefaults.instance.removeTenantId()
         } else {
-            this.currentSessionTenantId.value = currentSession!!.tenant.id
-            UserDefaults.instance.setTenantId(currentSession!!.tenant.id)
+            this.currentSessionTenantId.value = nextSession.tenant.id
+            UserDefaults.instance.setTenantId(nextSession.tenant.id)
         }
     }
 }

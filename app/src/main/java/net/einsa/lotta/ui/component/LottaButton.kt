@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import net.einsa.lotta.composition.LocalModelData
+import net.einsa.lotta.composition.LocalTheme
 
 @Composable
 fun LottaButton(
@@ -28,7 +28,7 @@ fun LottaButton(
     isLoading: Boolean = false,
     disabled: Boolean = false
 ) {
-    val modelData = LocalModelData.current
+    val theme = LocalTheme.current
 
     val isEnabled = !disabled && !isLoading
 
@@ -39,23 +39,23 @@ fun LottaButton(
             .widthIn(min = 160.dp),
         enabled = isEnabled,
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(modelData.theme.boxBackgroundColor.toArgb()),
-            contentColor = Color(modelData.theme.primaryColor.toArgb()),
-            disabledContainerColor = Color(modelData.theme.boxBackgroundColor.toArgb()),
-            disabledContentColor = Color(modelData.theme.disabledColor.toArgb())
+            containerColor = Color(theme.boxBackgroundColor.toArgb()),
+            contentColor = Color(theme.primaryColor.toArgb()),
+            disabledContainerColor = Color(theme.boxBackgroundColor.toArgb()),
+            disabledContentColor = Color(theme.disabledColor.toArgb())
         ),
-        shape = RoundedCornerShape(modelData.theme.borderRadius),
+        shape = RoundedCornerShape(theme.borderRadius),
         border = ButtonDefaults.outlinedButtonBorder.copy(
             brush = Brush.horizontalGradient(
                 colors = if (isEnabled) {
                     listOf(
-                        Color(modelData.theme.primaryColor.toArgb()),
-                        Color(modelData.theme.primaryColor.toArgb())
+                        Color(theme.primaryColor.toArgb()),
+                        Color(theme.primaryColor.toArgb())
                     )
                 } else {
                     listOf(
-                        Color(modelData.theme.disabledColor.toArgb()),
-                        Color(modelData.theme.disabledColor.toArgb())
+                        Color(theme.disabledColor.toArgb()),
+                        Color(theme.disabledColor.toArgb())
                     )
                 }
             )
@@ -67,7 +67,7 @@ fun LottaButton(
                     .size(ButtonDefaults.IconSize),
                 strokeWidth = 2.dp
             )
-            Spacer(modifier = Modifier.width(modelData.theme.spacing))
+            Spacer(modifier = Modifier.width(theme.spacing))
         }
         Text(text)
     }

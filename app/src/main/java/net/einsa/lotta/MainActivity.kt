@@ -20,6 +20,7 @@ import net.einsa.lotta.model.Theme
 import net.einsa.lotta.service.PushNotificationService
 import net.einsa.lotta.ui.theme.LottaTheme
 import net.einsa.lotta.ui.view.RootView
+import net.einsa.lotta.util.UserDefaults
 
 class MainActivity : ComponentActivity() {
     @OptIn(DelicateCoroutinesApi::class)
@@ -51,9 +52,18 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        intent.extras?.getString("tenant_id")?.let { tenantId ->
+            ModelData.instance.apply {
+                if (initialized) {
+                    setSession(tenantId)
+                } else {
+                    UserDefaults.instance.setTenantId(tenantId)
+                }
+            }
+        }
+
         setContent {
-            val theme = ModelData.instance.currentSession?.tenant?.customTheme ?: Theme()
-            LottaTheme(theme) {
+            LottaTheme(Theme()) {
                 CompositionLocalProvider(LocalModelData provides ModelData.instance) {
                     // A surface container using the 'background' color from the theme
                     Surface(

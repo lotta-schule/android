@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import net.einsa.lotta.composition.LocalModelData
+import net.einsa.lotta.composition.LocalTheme
+import net.einsa.lotta.composition.LocalUserSession
 import net.einsa.lotta.composition.UserSession
 import net.einsa.lotta.model.Theme
 import net.einsa.lotta.ui.component.LottaButton
@@ -37,10 +39,11 @@ import net.einsa.lotta.util.UserUtil.Companion.getVisibleName
 
 @Composable
 fun ProfileView() {
-    val modelData = LocalModelData.current
     var showDialog by remember { mutableStateOf(false) }
 
-    val theme = modelData.theme
+    val modelData = LocalModelData.current
+    val currentSession = LocalUserSession.current
+    val theme = LocalTheme.current
 
     if (showDialog) {
         Dialog(
@@ -73,9 +76,9 @@ fun ProfileView() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 2.dp),
-                    isSelected = session.equals(modelData.currentSession),
+                    isSelected = session == currentSession,
                     onSelect = {
-                        if (!session.equals(modelData.currentSession)) {
+                        if (session != currentSession) {
                             modelData.setSession(session.tenant.id)
                         }
                     }

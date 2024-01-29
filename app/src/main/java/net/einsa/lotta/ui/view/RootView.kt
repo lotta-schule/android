@@ -1,9 +1,9 @@
 package net.einsa.lotta.ui.view
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,14 +19,19 @@ import java.util.logging.Logger
 fun RootView(vm: RootViewModel = viewModel()) {
     var showDialog by remember { mutableStateOf(false) }
     val modelData = LocalModelData.current
-    val currentSession = modelData.currentSession
 
-    Log.i("RootView", "currentSession: $currentSession")
+    val currentSession by remember {
+        derivedStateOf {
+            modelData.userSessions.find {
+                it.tenant.id == modelData.currentSessionTenantId.value
+            } ?: modelData.userSessions.firstOrNull()
+        }
+    }
 
     LottaLogoView()
 
-    if (currentSession != null) {
-        TenantRootView(currentSession)
+    currentSession?.let {
+        TenantRootView(it)
     }
 
     if (showDialog) {
@@ -47,14 +52,16 @@ fun RootView(vm: RootViewModel = viewModel()) {
         }
     }
 
-    DisposableEffect(vm.isInitialized, currentSession) {
-        if (vm.isInitialized && currentSession == null) {
+    DisposableEffect(modelData.initialized, currentSession) {
+        if (modelData.initialized && currentSession == null) {
             showDialog = true
         }
         onDispose { }
     }
 
     LaunchedEffect(Unit) {
-        vm.init(modelData)
+        if (!modelData.initialized && !vm.didStartInitialization) {
+            vm.init(modelData)
+        }
     }
 }

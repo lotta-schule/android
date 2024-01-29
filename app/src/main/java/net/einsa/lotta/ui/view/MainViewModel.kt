@@ -17,7 +17,7 @@ import net.einsa.lotta.util.UserUtil
 class MainViewModel() : ViewModel() {
     private val _newMessageCount = mutableIntStateOf(0)
     val newMessageCount
-        get() = _newMessageCount.value
+        get() = _newMessageCount.intValue
 
     suspend fun subscribeToMessages(session: UserSession) {
         try {

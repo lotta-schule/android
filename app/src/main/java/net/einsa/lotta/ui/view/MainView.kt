@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Badge
@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,7 +44,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import kotlinx.coroutines.launch
-import net.einsa.lotta.composition.LocalModelData
+import net.einsa.lotta.App
+import net.einsa.lotta.composition.LocalTheme
 import net.einsa.lotta.composition.LocalUserSession
 import net.einsa.lotta.ui.view.messaging.ConversationView
 import net.einsa.lotta.ui.view.messaging.CreateConversationView
@@ -178,12 +180,33 @@ fun MainView(vm: MainViewModel = viewModel()) {
             }
         }
     }
+
+    LaunchedEffect(session) {
+        App.mainActivity.intent?.extras?.let { extras ->
+            if (extras.getString("category") == "receive_message") {
+                val tenantId = extras.getString("tenant_id")
+
+                val conversationId = extras.getString("conversation_id")
+
+                if (tenantId == session.tenant.id && conversationId != null) {
+                    navController.navigate(
+                        MainScreen.CONVERSATION.route
+                            .replace("{conversationId}", conversationId)
+                            .replace("{title}", extras.getString("title") ?: "?")
+                    )
+                }
+
+                extras.remove("category")
+            }
+        }
+    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAppBar(title: String, onCreateMessage: (() -> Unit)?, onNavigateBack: (() -> Unit)?) {
-    val modelData = LocalModelData.current
+    val theme = LocalTheme.current
 
     CenterAlignedTopAppBar(
         title = { Text(title) },
@@ -191,7 +214,7 @@ fun TopAppBar(title: String, onCreateMessage: (() -> Unit)?, onNavigateBack: (()
             onNavigateBack?.let {
                 IconButton(onClick = it) {
                     Icon(
-                        imageVector = Icons.Filled.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Zurück"
                     )
                 }
@@ -208,10 +231,10 @@ fun TopAppBar(title: String, onCreateMessage: (() -> Unit)?, onNavigateBack: (()
             }
         },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
-            titleContentColor = Color(modelData.theme.textColor.toArgb()),
-            containerColor = Color(modelData.theme.pageBackgroundColor.toArgb()),
-            actionIconContentColor = Color(modelData.theme.textColor.toArgb()),
-            navigationIconContentColor = Color(modelData.theme.textColor.toArgb()),
+            titleContentColor = Color(theme.textColor.toArgb()),
+            containerColor = Color(theme.pageBackgroundColor.toArgb()),
+            actionIconContentColor = Color(theme.textColor.toArgb()),
+            navigationIconContentColor = Color(theme.textColor.toArgb()),
         )
     )
 }
@@ -223,9 +246,7 @@ fun BottomNavigationBar(
     onSelect: (MainScreen) -> Unit,
     currentNavDestination: NavDestination? = null
 ) {
-    val modelData = LocalModelData.current
-
-    val theme = modelData.theme
+    val theme = LocalTheme.current
 
     val colors = NavigationBarItemDefaults.colors(
         selectedIconColor = Color(theme.primaryColor.toArgb()),
