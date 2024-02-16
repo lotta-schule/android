@@ -176,7 +176,9 @@ fun MainView(vm: MainViewModel = viewModel()) {
                 }
             }
             composable(route = MainScreen.PROFILE.route) {
-                ProfileView()
+                ProfileView(onSwitchProfile = {
+                    navController.navigate(MainScreen.MESSAGING.route)
+                })
             }
         }
     }

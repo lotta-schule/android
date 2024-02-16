@@ -38,7 +38,7 @@ import net.einsa.lotta.ui.view.login.CreateLoginSessionView
 import net.einsa.lotta.util.UserUtil.Companion.getVisibleName
 
 @Composable
-fun ProfileView() {
+fun ProfileView(onSwitchProfile: () -> Unit) {
     var showDialog by remember { mutableStateOf(false) }
 
     val modelData = LocalModelData.current
@@ -80,6 +80,7 @@ fun ProfileView() {
                     onSelect = {
                         if (session != currentSession) {
                             modelData.setSession(session.tenant.id)
+                            onSwitchProfile()
                         }
                     }
                 )
