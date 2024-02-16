@@ -11,9 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import net.einsa.lotta.GetConversationsQuery
 import net.einsa.lotta.composition.LocalModelData
 import net.einsa.lotta.composition.LocalTheme
 import net.einsa.lotta.composition.LocalUserSession
@@ -114,6 +119,13 @@ fun UserSessionListItem(
 ) {
     val theme = session.tenant.customTheme
     val defaultTheme = Theme()
+    val badgeCount = remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(key1 = session) {
+        val response = session.api.apollo.query(GetConversationsQuery()).execute()
+        badgeCount.intValue = response.data?.conversations?.sumOf { it?.unreadMessages ?: 0 } ?: 0
+    }
+
     Row(
         modifier = modifier
             .border(
@@ -136,9 +148,32 @@ fun UserSessionListItem(
             .padding(defaultTheme.spacing)
             .clickable { onSelect() },
     ) {
-        UserAvatar(session.user, size = 48, modifier = Modifier.padding(end = defaultTheme.spacing))
+        if (badgeCount.intValue > 0) {
+            BadgedBox(
+                modifier = Modifier.padding(end = defaultTheme.spacing),
+                badge = {
+                    Badge(
+                        containerColor = Color(theme.primaryColor.toArgb()),
+                        contentColor = Color(theme.primaryContrastTextColor.toArgb()),
+                    ) {
+                        Text(
+                            badgeCount.intValue.toString(),
+                        )
+                    }
+                }) {
+                UserAvatar(
+                    session.user,
+                    size = 48,
+                )
+            }
+        } else {
+            UserAvatar(
+                session.user,
+                size = 48,
+            )
+        }
 
-        Column {
+        Column(modifier = Modifier.padding(start = defaultTheme.spacing)) {
             Text(
                 session.tenant.title, style = TextStyle(fontWeight = FontWeight.Bold)
             )
