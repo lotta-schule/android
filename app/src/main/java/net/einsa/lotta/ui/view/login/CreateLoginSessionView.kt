@@ -28,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,9 +73,9 @@ fun CreateLoginSessionView(
 
     val theme = remember { Theme() }
 
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
-    var selectedTenantDescriptor by rememberSaveable() { mutableStateOf<TenantDescriptor?>(null) }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var selectedTenantDescriptor by remember { mutableStateOf<TenantDescriptor?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -301,8 +300,8 @@ fun UserAuthPasswordTextField(
 }
 
 
-@Preview()
-@Composable()
+@Preview
+@Composable
 fun Preview_CreateLoginSessionView() {
     CreateLoginSessionView()
 }

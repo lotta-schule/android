@@ -139,9 +139,9 @@ fun UserSessionListItem(
 
         Column {
             Text(
-                getVisibleName(session.user), style = TextStyle(fontWeight = FontWeight.Bold)
+                session.tenant.title, style = TextStyle(fontWeight = FontWeight.Bold)
             )
-            Text(session.tenant.title, style = TextStyle(fontSize = 12.sp))
+            Text(getVisibleName(session.user), style = TextStyle(fontSize = 12.sp))
         }
     }
 }
