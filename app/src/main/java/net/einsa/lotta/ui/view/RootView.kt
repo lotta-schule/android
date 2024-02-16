@@ -52,15 +52,15 @@ fun RootView(vm: RootViewModel = viewModel()) {
         }
     }
 
-    DisposableEffect(modelData.initialized, currentSession) {
-        if (modelData.initialized && currentSession == null) {
+    DisposableEffect(vm.initialized, currentSession) {
+        if (vm.initialized && currentSession == null) {
             showDialog = true
         }
         onDispose { }
     }
 
     LaunchedEffect(Unit) {
-        if (!modelData.initialized && !vm.didStartInitialization) {
+        if (!vm.initialized && !vm.didStartInitialization) {
             vm.init(modelData)
         }
     }

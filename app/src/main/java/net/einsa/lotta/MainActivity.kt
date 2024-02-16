@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
 
         intent.extras?.getString("tenant_id")?.let { tenantId ->
             ModelData.instance.apply {
-                if (initialized) {
+                if (ModelData.instance.initialized) {
                     setSession(tenantId)
                 } else {
                     UserDefaults.instance.setTenantId(tenantId)

@@ -11,10 +11,15 @@ class RootViewModel : ViewModel() {
     val didStartInitialization: Boolean
         get() = _didStartInitialization.value
 
+    private val _initialized = mutableStateOf(false)
+    val initialized: Boolean
+        get() = _initialized.value
+
     suspend fun init(modelData: ModelData) {
         _didStartInitialization.value = true
         return withContext(Dispatchers.IO) {
             modelData.initializeSessions()
+            _initialized.value = true
         }
     }
 }
