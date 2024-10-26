@@ -2,6 +2,7 @@ import io.sentry.android.gradle.extensions.InstrumentationFeature
 import io.sentry.android.gradle.instrumentation.logcat.LogcatLevel
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import java.nio.charset.Charset
 
 plugins {
     id("com.android.application")
@@ -199,4 +200,15 @@ sentry {
 
         telemetry.set(true)
     }
+}
+
+task("bumpBuildNumber") {
+    buildFile.readText(Charset.defaultCharset())
+        .replace("(versionCode\\s*=\\s*)(\\d+)".toRegex()) { matchResult ->
+            val newVersionCode = matchResult.groupValues[2].toInt() + 1
+            return@replace "${matchResult.groupValues[1]}${newVersionCode}"
+        }
+        .let { updatedText ->
+            buildFile.writeText(updatedText, Charset.defaultCharset())
+        }
 }

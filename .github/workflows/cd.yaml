@@ -5,12 +5,46 @@ on:
       - main
 
 jobs:
+  bump_version:
+    name: Bump version
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    outputs:
+      commit_hash: ${{ steps.update_commit.outputs.commit_hash }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 20
+
+      - name: Bump version
+        run: |
+          ./gradlew bumpBuildNumber
+
+      - name: Commit version bump
+        uses: stefanzweifel/git-auto-commit-action@v5
+        id: update_commit
+        with:
+          commit_message: "Bump version"
+
   build:
     runs-on: ubuntu-latest
+    needs:
+      - bump_version
 
     steps:
       - name: Checking out branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump_version.outputs.commit_hash || github.sha }}
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -57,6 +91,4 @@ jobs:
           packageName: net.einsa.lotta
           releaseFiles: ${{ steps.releaseAab.outputs.aabfile }}
           track: beta
-          status: draft
-          mappingFile: app/build/outputs/mapping/release/mapping.txt
-          debugSymbols: app/intermediates/merged_native_libs/release/out/lib
+          status: completed
