@@ -162,7 +162,6 @@ apollo {
 }
 
 sentry {
-    debug.set(true)
     org.set("lotta")
     projectName.set("android")
 
