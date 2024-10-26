@@ -203,12 +203,14 @@ sentry {
 }
 
 task("bumpBuildNumber") {
-    buildFile.readText(Charset.defaultCharset())
-        .replace("(versionCode\\s*=\\s*)(\\d+)".toRegex()) { matchResult ->
-            val newVersionCode = matchResult.groupValues[2].toInt() + 1
-            return@replace "${matchResult.groupValues[1]}${newVersionCode}"
-        }
-        .let { updatedText ->
-            buildFile.writeText(updatedText, Charset.defaultCharset())
-        }
+    doLast {
+        buildFile.readText(Charset.defaultCharset())
+            .replace("(versionCode\\s*=\\s*)(\\d+)".toRegex()) { matchResult ->
+                val newVersionCode = matchResult.groupValues[2].toInt() + 1
+                return@replace "${matchResult.groupValues[1]}${newVersionCode}"
+            }
+            .let { updatedText ->
+                buildFile.writeText(updatedText, Charset.defaultCharset())
+            }
+    }
 }
