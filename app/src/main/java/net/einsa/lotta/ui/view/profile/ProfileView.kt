@@ -3,6 +3,7 @@ package net.einsa.lotta.ui.view.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -69,10 +70,16 @@ fun ProfileView(onSwitchProfile: () -> Unit) {
         }
     }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier =
+            Modifier
+                .background(Color(theme.boxBackgroundColor.toArgb()))
+                .padding(theme.spacing)
+    ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth(.75f)
+                .fillMaxWidth()
         ) {
             Text("Angemeldet als:", modifier = Modifier.fillMaxWidth())
             modelData.userSessions.forEach { session ->
@@ -98,14 +105,16 @@ fun ProfileView(onSwitchProfile: () -> Unit) {
             onClick = {
                 showDialog = true
             },
-            text = "Account hinzufügen"
+            text = "Account hinzufügen",
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(theme.spacing.times(2)))
 
         LottaButton(
             onClick = { modelData.removeCurrentSession() },
-            text = "Abmelden"
+            text = "Abmelden",
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

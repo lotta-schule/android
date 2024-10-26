@@ -1,5 +1,6 @@
 package net.einsa.lotta.ui.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -7,6 +8,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import net.einsa.lotta.GetConversationQuery
 import net.einsa.lotta.composition.LocalUserSession
 
@@ -23,7 +25,8 @@ fun MessageList(messages: List<GetConversationQuery.Message>, modifier: Modifier
 
     LazyColumn(
         modifier = modifier
-            .fillMaxHeight(),
+            .fillMaxHeight()
+            .background(Color(session.tenant.customTheme.boxBackgroundColor.toArgb())),
         reverseLayout = true,
         state = listState
     ) {

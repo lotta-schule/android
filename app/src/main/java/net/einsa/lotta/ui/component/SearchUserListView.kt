@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -58,7 +58,7 @@ fun SearchUserList(
                     Text(UserUtil.getVisibleName(user))
                 }
                 if (index < vm.searchResults.size - 1)
-                    Divider(
+                    HorizontalDivider(
                         modifier = Modifier.padding(horizontal = session.tenant.customTheme.spacing),
                         color = Color(session.tenant.customTheme.dividerColor.toArgb()),
                         thickness = 1.dp

@@ -1,5 +1,6 @@
 package net.einsa.lotta.ui.view.messaging
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,8 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -43,14 +44,14 @@ fun ConversationsList(
         }
     }
 
-    LazyColumn {
-        itemsIndexed(vm.conversations, key = { i, con -> con.id!! }) { index, conversation ->
+    LazyColumn(Modifier.background(Color(userSession.tenant.customTheme.boxBackgroundColor.toArgb()))) {
+        itemsIndexed(vm.conversations, key = { _, con -> con.id!! }) { index, conversation ->
             ConversationListItemView(
                 conversation,
                 onSelect = { onSelectConversation(conversation) },
             )
             if (index < vm.conversations.size - 1)
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier.padding(horizontal = userSession.tenant.customTheme.spacing),
                     color = Color(userSession.tenant.customTheme.dividerColor.toArgb()),
                     thickness = 1.dp
