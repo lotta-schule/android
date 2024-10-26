@@ -1,3 +1,5 @@
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+import io.sentry.android.gradle.instrumentation.logcat.LogcatLevel
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
@@ -32,8 +34,8 @@ android {
         applicationId = "net.einsa.lotta"
         minSdk = 28
         targetSdk = 34
-        versionCode = 9
-        versionName = "0.9"
+        versionCode = 10
+        versionName = "0.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -71,9 +73,19 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../keystore.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("KEY_ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
-        release {
+        getByName("release") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -83,6 +95,7 @@ android {
             }
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -149,10 +162,42 @@ apollo {
 }
 
 sentry {
+    debug.set(true)
     org.set("lotta")
     projectName.set("android")
 
-    // this will upload your source code to Sentry to show it as part of the stack traces
-    // disable if you don't want to expose your sources
+    authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
+
+    includeProguardMapping.set(true)
+    autoUploadProguardMapping.set(true)
+    autoUploadNativeSymbols.set(true)
+
+    includeNativeSources.set(true)
     includeSourceContext.set(true)
+
+    tracingInstrumentation {
+        enabled.set(true)
+        features.set(setOf(
+            InstrumentationFeature.DATABASE,
+            InstrumentationFeature.FILE_IO,
+            InstrumentationFeature.OKHTTP,
+            InstrumentationFeature.COMPOSE
+        ))
+
+        logcat {
+            enabled.set(true)
+
+            // Specifies a minimum log level for the logcat breadcrumb logging.
+            // Defaults to LogcatLevel.WARNING.
+            minLevel.set(LogcatLevel.WARNING)
+        }
+
+        autoInstallation {
+            enabled.set(true)
+        }
+
+        includeDependenciesReport.set(true)
+
+        telemetry.set(true)
+    }
 }
