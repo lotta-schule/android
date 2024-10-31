@@ -36,19 +36,19 @@ class MainViewModel() : ViewModel() {
                         val conversations =
                             session.api.apollo.apolloStore.readOperation(GetConversationsQuery()).conversations
                         val isNewConversation =
-                            conversations?.find { it?.id == message.conversation?.id } == null
+                            conversations?.find { it?.id == message.conversation.id } == null
 
                         val newConversations = if (isNewConversation) {
                             mutableListOf(
                                 GetConversationsQuery.Conversation(
-                                    id = message.conversation?.id,
-                                    groups = message.conversation?.groups?.map { group ->
+                                    id = message.conversation.id,
+                                    groups = message.conversation.groups?.map { group ->
                                         GetConversationsQuery.Group(
                                             id = group.id,
                                             name = group.name,
                                         )
                                     },
-                                    users = message.conversation?.users?.map { user ->
+                                    users = message.conversation.users?.map { user ->
                                         GetConversationsQuery.User(
                                             id = user.id,
                                             name = null,
@@ -67,14 +67,14 @@ class MainViewModel() : ViewModel() {
                             ).apply { addAll(conversations?.filterNotNull() ?: emptyList()) }
                         } else {
                             conversations!!.map {
-                                if (it?.id == message.conversation?.id) {
+                                if (it?.id == message.conversation.id) {
                                     it!!.copy(
                                         messages = it.messages?.plus(
                                             GetConversationsQuery.Message(
-                                                id = message.conversation?.id,
+                                                id = message.conversation.id!!,
                                             )
                                         ),
-                                        unreadMessages = message.conversation?.unreadMessages
+                                        unreadMessages = message.conversation.unreadMessages
                                             ?: ((it.unreadMessages
                                                 ?: 0) + 1),
                                         updatedAt = message.updatedAt,
@@ -115,19 +115,19 @@ class MainViewModel() : ViewModel() {
                                             content = message.content,
                                             files = message.files?.map { file ->
                                                 GetConversationQuery.File(
-                                                    id = file?.id,
-                                                    filename = file?.filename,
-                                                    filesize = file?.filesize,
-                                                    fileType = file?.fileType,
+                                                    id = file.id,
+                                                    filename = file.filename,
+                                                    filesize = file.filesize,
+                                                    fileType = file.fileType,
                                                 )
                                             },
                                             user = GetConversationQuery.User1(
                                                 id = session.user.id,
                                                 name = session.user.name,
                                                 nickname = session.user.nickname,
-                                                avatarImageFile = GetConversationQuery.AvatarImageFile1(
-                                                    id = session.user.avatarImageFileId
-                                                ),
+                                                avatarImageFile = session.user.avatarImageFileId?.let { fileId ->
+                                                    GetConversationQuery.AvatarImageFile1(fileId)
+                                                },
                                             ),
                                             updatedAt = message.updatedAt,
                                             insertedAt = message.insertedAt,
@@ -200,7 +200,7 @@ class MainViewModel() : ViewModel() {
                 runCatching {
                     session.api.apollo.apolloStore.readOperation(GetConversationsQuery())
                         .conversations?.find { conversation ->
-                            conversation?.users?.mapNotNull { it.id }?.contains(user!!.id!!)
+                            conversation?.users?.map { it.id }?.contains(user!!.id)
                                 ?: false
                         }?.let { conversation ->
                             return@onCreateNewMessage MainScreen.CONVERSATION.route.replace(
@@ -219,7 +219,7 @@ class MainViewModel() : ViewModel() {
                     .replace(
                         "{title}", UserUtil.getVisibleName(user!!)
                     )
-                    .replace("{userId}", user.id!!)
+                    .replace("{userId}", user.id)
                     .replace("&groupId={groupId}", "")
             }
         }

@@ -159,6 +159,8 @@ dependencies {
 apollo {
     service("service") {
         packageName.set("net.einsa.lotta")
+
+        mapScalarToKotlinString("DateTime")
     }
 }
 

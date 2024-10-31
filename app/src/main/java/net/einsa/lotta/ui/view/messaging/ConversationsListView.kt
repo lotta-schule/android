@@ -154,7 +154,7 @@ fun ConversationListItemView(
 
 private fun formatLastUpdatedInfo(conversation: GetConversationsQuery.Conversation): String? {
     try {
-        val accessor = DateTimeFormatter.ISO_DATE_TIME.parse(conversation.updatedAt as String)
+        val accessor = DateTimeFormatter.ISO_DATE_TIME.parse(conversation.updatedAt)
         val instant = Instant.from(accessor)
         return DateUtils.getRelativeTimeSpanString(instant.toEpochMilli()).toString()
     } catch (e: Exception) {

@@ -29,20 +29,12 @@ class MessageInputViewModel : ViewModel() {
                         content = Optional.present(content),
                         recipientUser = userId?.let {
                             Optional.present(
-                                SelectUserInput(
-                                    Optional.present(
-                                        it
-                                    )
-                                )
+                                SelectUserInput(it)
                             )
                         } ?: Optional.absent(),
                         recipientGroup = groupId?.let {
                             Optional.present(
-                                SelectUserGroupInput(
-                                    Optional.present(
-                                        it
-                                    )
-                                )
+                                SelectUserGroupInput(it)
                             )
                         } ?: Optional.absent(),
                     )
@@ -144,13 +136,13 @@ class MessageInputViewModel : ViewModel() {
                                             id = session.user.id,
                                             name = session.user.name,
                                             nickname = session.user.nickname,
-                                            avatarImageFile = GetConversationQuery.AvatarImageFile1(
-                                                id = session.user.avatarImageFileId
-                                            ),
+                                            avatarImageFile = session.user.avatarImageFileId?.let { fileId ->
+                                                GetConversationQuery.AvatarImageFile1(fileId)
+                                            },
                                         ),
-                                        updatedAt = response.data?.message?.updatedAt,
-                                        insertedAt = response.data?.message?.insertedAt,
-                                    )
+                                        insertedAt = response.data?.message?.insertedAt!!,
+                                        updatedAt = response.data?.message?.updatedAt!!,
+                                    ),
                                 ).let {
                                     it.addAll(
                                         conversation?.messages?.filter { it.id != response.data?.message?.id }

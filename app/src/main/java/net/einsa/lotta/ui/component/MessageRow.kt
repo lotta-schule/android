@@ -60,6 +60,8 @@ fun MessageRow(
                     modifier = Modifier.padding(theme.spacing)
                 )
             }
+        } else if (fromCurrentUser) {
+            Spacer(modifier = Modifier.width(32.dp))
         }
         Column(
             horizontalAlignment = if (fromCurrentUser) Alignment.End else Alignment.Start,
@@ -89,6 +91,8 @@ fun MessageRow(
                         .padding(theme.spacing)
                 )
             }
+        } else if (!fromCurrentUser) {
+            Spacer(modifier = Modifier.width(32.dp))
         }
     }
 }
