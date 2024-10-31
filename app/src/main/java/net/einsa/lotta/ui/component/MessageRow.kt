@@ -26,6 +26,7 @@ import java.time.format.FormatStyle
 fun MessageRow(
     message: GetConversationQuery.Message,
     fromCurrentUser: Boolean,
+    isGroupChat: Boolean,
     modifier: Modifier = Modifier
 ) {
     val session = LocalUserSession.current
@@ -49,14 +50,16 @@ fun MessageRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Bottom
     ) {
-        if (fromCurrentUser) {
-            Spacer(modifier = Modifier.width(48.dp - theme.spacing * 2))
-        } else {
-            UserAvatar(
-                user = message.user!!,
-                size = 48,
-                modifier = Modifier.padding(theme.spacing)
-            )
+        if (isGroupChat) {
+            if (fromCurrentUser) {
+                Spacer(modifier = Modifier.width(48.dp - theme.spacing * 2))
+            } else {
+                UserAvatar(
+                    user = message.user!!,
+                    size = 48,
+                    modifier = Modifier.padding(theme.spacing)
+                )
+            }
         }
         Column(
             horizontalAlignment = if (fromCurrentUser) Alignment.End else Alignment.Start,
@@ -69,20 +72,23 @@ fun MessageRow(
                 message,
                 fromCurrentUser = fromCurrentUser
             )
+            val text = if (isGroupChat) "$userName, ${formattedDateLine()}" else formattedDateLine()
             Text(
-                userName + ", " + formattedDateLine(),
+                text,
                 style = TextStyle(fontSize = 10.sp, color = Color(theme.disabledColor.toArgb()))
             )
         }
-        if (!fromCurrentUser) {
-            Spacer(modifier = Modifier.width(48.dp - theme.spacing * 2))
-        } else {
-            UserAvatar(
-                user = message.user!!,
-                size = 48,
-                modifier = Modifier
-                    .padding(theme.spacing)
-            )
+        if (isGroupChat) {
+            if (!fromCurrentUser) {
+                Spacer(modifier = Modifier.width(48.dp - theme.spacing * 2))
+            } else {
+                UserAvatar(
+                    user = message.user!!,
+                    size = 48,
+                    modifier = Modifier
+                        .padding(theme.spacing)
+                )
+            }
         }
     }
 }

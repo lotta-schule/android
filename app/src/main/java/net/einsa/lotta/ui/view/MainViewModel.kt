@@ -11,6 +11,7 @@ import net.einsa.lotta.ReceiveMessageSubscription
 import net.einsa.lotta.SearchUsersQuery
 import net.einsa.lotta.composition.UserSession
 import net.einsa.lotta.model.Group
+import net.einsa.lotta.model.getUrl
 import net.einsa.lotta.ui.view.messaging.NewMessageDestination
 import net.einsa.lotta.util.UserUtil
 
@@ -208,6 +209,9 @@ class MainViewModel() : ViewModel() {
                             ).replace(
                                 "{title}",
                                 UserUtil.getVisibleName(user!!)
+                            ).replace(
+                                "{imageUrl}",
+                                user.avatarImageFile?.id?.getUrl(session.tenant) ?: ""
                             )
                         }
                 }

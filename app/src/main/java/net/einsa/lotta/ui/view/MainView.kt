@@ -1,5 +1,6 @@
 package net.einsa.lotta.ui.view
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,6 +49,8 @@ import kotlinx.coroutines.launch
 import net.einsa.lotta.App
 import net.einsa.lotta.composition.LocalTheme
 import net.einsa.lotta.composition.LocalUserSession
+import net.einsa.lotta.ui.component.Avatar
+import net.einsa.lotta.ui.component.UserAvatar
 import net.einsa.lotta.ui.view.messaging.ConversationView
 import net.einsa.lotta.ui.view.messaging.CreateConversationView
 import net.einsa.lotta.ui.view.messaging.MessagingView
@@ -69,8 +73,9 @@ enum class MainScreen(
         )
     ),
     CONVERSATION(
-        "messages/{conversationId}?title={title}", arguments = listOf(
-            navArgument("title") { nullable = true }
+        "messages/{conversationId}?title={title}&imageUrl={imageUrl}", arguments = listOf(
+            navArgument("title") { nullable = true },
+            navArgument("imageUrl") { nullable = true }
         )
     ),
 }
@@ -81,6 +86,7 @@ fun MainView(vm: MainViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
     val backStackEntry = navController.currentBackStackEntryAsState()
     var showNewConversationDialog by remember { mutableStateOf(false) }
+    val theme = LocalTheme.current
 
     val session = LocalUserSession.current
 
@@ -134,7 +140,31 @@ fun MainView(vm: MainViewModel = viewModel()) {
                     showNewConversationDialog = true
                 }),
                 title = navController.currentBackStackEntry?.arguments?.getString("title")
-                    ?: currentScreen.title ?: currentScreen.name
+                    ?: currentScreen.title ?: currentScreen.name,
+                leftSection = {
+                    if (currentScreen.name === "CONVERSATIONS") {
+                        Box(Modifier.padding(start = theme.spacing)) {
+                            UserAvatar(
+                                session.user,
+                                size = 40,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    }
+                },
+                rightSection = {
+                    if (currentScreen.name == "CONVERSATION") {
+                        navController.currentBackStackEntry?.arguments?.getString("imageUrl")?.let {
+                            Box(Modifier.padding(end = theme.spacing)) {
+                                Avatar(
+                                    url = it,
+                                    size = 40,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             )
         },
         bottomBar = {
@@ -195,6 +225,7 @@ fun MainView(vm: MainViewModel = viewModel()) {
                         MainScreen.CONVERSATION.route
                             .replace("{conversationId}", conversationId)
                             .replace("{title}", extras.getString("title") ?: "?")
+                            // TODO: Where the fuck can I get the imageUrl from? .replace("{imageUrl}", imageUrl ?: "")
                     )
                 }
 
@@ -207,19 +238,27 @@ fun MainView(vm: MainViewModel = viewModel()) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBar(title: String, onCreateMessage: (() -> Unit)?, onNavigateBack: (() -> Unit)?) {
+fun TopAppBar(
+    title: String,
+    leftSection: (@Composable () -> Unit)?,
+    rightSection: (@Composable () -> Unit)?,
+    onCreateMessage: (() -> Unit)?,
+    onNavigateBack: (() -> Unit)?
+) {
     val theme = LocalTheme.current
 
     CenterAlignedTopAppBar(
         title = { Text(title) },
         navigationIcon = {
-            onNavigateBack?.let {
-                IconButton(onClick = it) {
+            if (onNavigateBack != null) {
+                IconButton(onClick = onNavigateBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Zurück"
                     )
                 }
+            } else if (leftSection != null) {
+                leftSection()
             }
         },
         actions = {
@@ -230,6 +269,8 @@ fun TopAppBar(title: String, onCreateMessage: (() -> Unit)?, onNavigateBack: (()
                         contentDescription = "Neue Nachricht schreiben"
                     )
                 }
+            } else if (rightSection != null) {
+                rightSection()
             }
         },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
@@ -241,7 +282,6 @@ fun TopAppBar(title: String, onCreateMessage: (() -> Unit)?, onNavigateBack: (()
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable()
 fun BottomNavigationBar(
     newMessageCount: Int,

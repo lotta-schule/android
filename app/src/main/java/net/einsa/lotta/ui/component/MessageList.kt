@@ -13,7 +13,7 @@ import net.einsa.lotta.GetConversationQuery
 import net.einsa.lotta.composition.LocalUserSession
 
 @Composable
-fun MessageList(messages: List<GetConversationQuery.Message>, modifier: Modifier = Modifier) {
+fun MessageList(messages: List<GetConversationQuery.Message>, isGroupChat: Boolean, modifier: Modifier = Modifier) {
     val session = LocalUserSession.current
     val listState = rememberLazyListState()
 
@@ -31,7 +31,7 @@ fun MessageList(messages: List<GetConversationQuery.Message>, modifier: Modifier
         state = listState
     ) {
         items(messages, key = { it.id!! }) { message ->
-            MessageRow(message, fromCurrentUser = message.user?.id == session.user.id)
+            MessageRow(message, fromCurrentUser = message.user?.id == session.user.id, isGroupChat = isGroupChat)
         }
     }
 }

@@ -33,6 +33,7 @@ fun ConversationView(conversationId: ID, vm: ConversationViewModel = viewModel()
     ) {
         MessageList(
             messages = vm.conversation?.messages ?: emptyList(),
+            isGroupChat = vm.conversation?.groups?.isNotEmpty() == true,
             modifier = Modifier.weight(1f)
         )
         MessageInputView(

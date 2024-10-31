@@ -1,7 +1,9 @@
 package net.einsa.lotta.ui.view.messaging
 
+import android.text.format.DateUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,13 +23,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import net.einsa.lotta.GetConversationsQuery
 import net.einsa.lotta.composition.LocalUserSession
+import net.einsa.lotta.type.DateTime
 import net.einsa.lotta.ui.component.Avatar
 import net.einsa.lotta.util.ConversationUtil
+import java.time.Instant
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalField
+import java.util.Date
+import java.util.logging.Level
+import java.util.logging.Logger
 
 @Composable
 fun ConversationsList(
@@ -100,18 +112,28 @@ fun ConversationListItemView(
         } else {
             Spacer(modifier = Modifier.width(lineHeight.dp))
         }
-        if ((conversation.unreadMessages ?: 0) > 0) {
-            BadgedBox(
-                badge = {
-                    Badge(
-                        containerColor = Color(userSession.tenant.customTheme.primaryColor.toArgb()),
-                        contentColor = Color(userSession.tenant.customTheme.primaryContrastTextColor.toArgb()),
-                    ) {
-                        Text(
-                            conversation.unreadMessages.toString(),
-                        )
-                    }
-                }) {
+        Column {
+            if ((conversation.unreadMessages ?: 0) > 0) {
+                BadgedBox(
+                    badge = {
+                        Badge(
+                            containerColor = Color(userSession.tenant.customTheme.primaryColor.toArgb()),
+                            contentColor = Color(userSession.tenant.customTheme.primaryContrastTextColor.toArgb()),
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Text(
+                                conversation.unreadMessages.toString(),
+                            )
+                        }
+                    }) {
+                    Text(
+                        ConversationUtil.getTitle(
+                            conversation = conversation,
+                            excludingUserId = userSession.user.id
+                        ), Modifier.padding(end = 4.dp)
+                    )
+                }
+            } else {
                 Text(
                     ConversationUtil.getTitle(
                         conversation = conversation,
@@ -119,13 +141,24 @@ fun ConversationListItemView(
                     )
                 )
             }
-        } else {
-            Text(
-                ConversationUtil.getTitle(
-                    conversation = conversation,
-                    excludingUserId = userSession.user.id
+            formatLastUpdatedInfo(conversation)?.let {
+                Text(
+                    it,
+                    style = TextStyle(fontSize = 10.sp),
+                    color = Color(userSession.tenant.customTheme.disabledColor.toArgb())
                 )
-            )
+            }
         }
+    }
+}
+
+private fun formatLastUpdatedInfo(conversation: GetConversationsQuery.Conversation): String? {
+    try {
+        val accessor = DateTimeFormatter.ISO_DATE_TIME.parse(conversation.updatedAt as String)
+        val instant = Instant.from(accessor)
+        return DateUtils.getRelativeTimeSpanString(instant.toEpochMilli()).toString()
+    } catch (e: Exception) {
+        Logger.getGlobal().log(Level.WARNING, "Could not parse date: ${conversation.updatedAt}")
+        return null
     }
 }
