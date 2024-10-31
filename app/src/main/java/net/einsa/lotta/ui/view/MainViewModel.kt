@@ -3,7 +3,9 @@ package net.einsa.lotta.ui.view
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.ViewModel
+import com.apollographql.apollo3.cache.normalized.FetchPolicy
 import com.apollographql.apollo3.cache.normalized.apolloStore
+import com.apollographql.apollo3.cache.normalized.fetchPolicy
 import com.apollographql.apollo3.cache.normalized.watch
 import net.einsa.lotta.GetConversationQuery
 import net.einsa.lotta.GetConversationsQuery
@@ -11,6 +13,7 @@ import net.einsa.lotta.ReceiveMessageSubscription
 import net.einsa.lotta.SearchUsersQuery
 import net.einsa.lotta.composition.UserSession
 import net.einsa.lotta.model.Group
+import net.einsa.lotta.model.ID
 import net.einsa.lotta.model.getUrl
 import net.einsa.lotta.ui.view.messaging.NewMessageDestination
 import net.einsa.lotta.util.UserUtil
@@ -223,5 +226,14 @@ class MainViewModel() : ViewModel() {
                     .replace("&groupId={groupId}", "")
             }
         }
+    }
+
+    suspend fun getConversation(
+        conversationId: ID,
+        session: UserSession
+    ): GetConversationQuery.Conversation? {
+        return session.api.apollo.query(GetConversationQuery(conversationId))
+            .fetchPolicy(FetchPolicy.CacheFirst)
+            .execute().data?.conversation
     }
 }

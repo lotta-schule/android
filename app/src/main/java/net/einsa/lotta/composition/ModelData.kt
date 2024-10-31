@@ -50,6 +50,20 @@ class ModelData {
         if (userSessions.isNotEmpty()) {
             PushNotificationService.instance.startReceivingNotifications()
         }
+
+        Sentry.configureScope { scope ->
+            scope.user = userSessions.firstOrNull()?.user?.toSentryUser()
+            scope.setContexts(
+                "tenant", mapOf(
+                    "id" to currentSessionTenantId.value
+                )
+            )
+            scope.setContexts(
+                "sessionCount", mapOf(
+                    "id" to userSessions.count()
+                )
+            )
+        }
         initialized = true
     }
 
@@ -62,13 +76,18 @@ class ModelData {
         UserDefaults.instance.setTenantId(tenantId)
         currentSessionTenantId.value = tenantId
         Sentry.configureScope { scope ->
+            scope.user = session.user.toSentryUser()
             scope.setContexts(
                 "tenant", mapOf(
                     "id" to session.tenant.id,
                     "slug" to session.tenant.slug
                 )
             )
-            scope.user = session.user.toSentryUser()
+            scope.setContexts(
+                "sessionCount", mapOf(
+                    "id" to userSessions.count()
+                )
+            )
         }
         return true
     }

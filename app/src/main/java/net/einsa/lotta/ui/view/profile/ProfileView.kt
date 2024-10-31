@@ -3,7 +3,6 @@ package net.einsa.lotta.ui.view.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -45,27 +44,42 @@ import net.einsa.lotta.util.UserUtil.Companion.getVisibleName
 
 @Composable
 fun ProfileView(onSwitchProfile: () -> Unit) {
-    var showDialog by remember { mutableStateOf(false) }
+    var showLoginDialog by remember { mutableStateOf(false) }
+    var showFeedbackDialog by remember { mutableStateOf(false) }
 
     val modelData = LocalModelData.current
     val currentSession = LocalUserSession.current
     val theme = LocalTheme.current
 
-    if (showDialog) {
+    if (showLoginDialog) {
         Dialog(
             properties = DialogProperties(
                 dismissOnBackPress = true,
                 usePlatformDefaultWidth = false
             ),
-            onDismissRequest = { showDialog = false }
+            onDismissRequest = { showLoginDialog = false }
         ) {
             CreateLoginSessionView(
                 onLogin = { userSession ->
-                    showDialog = false
+                    showLoginDialog = false
                     modelData.add(userSession)
                 },
-                onDismiss = { showDialog = false },
+                onDismiss = { showLoginDialog = false },
                 modifier = Modifier.fillMaxHeight(.9f)
+            )
+        }
+    }
+
+    if (showFeedbackDialog) {
+        Dialog(
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                usePlatformDefaultWidth = true
+            ),
+            onDismissRequest = { showFeedbackDialog = false }
+        ) {
+            FeedbackDialog(
+                onDismiss = { showFeedbackDialog = false },
             )
         }
     }
@@ -73,9 +87,9 @@ fun ProfileView(onSwitchProfile: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
-            Modifier
-                .background(Color(theme.boxBackgroundColor.toArgb()))
-                .padding(theme.spacing)
+        Modifier
+            .background(Color(theme.boxBackgroundColor.toArgb()))
+            .padding(theme.spacing)
     ) {
         Column(
             modifier = Modifier
@@ -103,7 +117,7 @@ fun ProfileView(onSwitchProfile: () -> Unit) {
 
         LottaButton(
             onClick = {
-                showDialog = true
+                showLoginDialog = true
             },
             text = "Account hinzufügen",
             modifier = Modifier.fillMaxWidth()
@@ -112,9 +126,22 @@ fun ProfileView(onSwitchProfile: () -> Unit) {
         Spacer(modifier = Modifier.height(theme.spacing.times(2)))
 
         LottaButton(
+            onClick = {
+                showFeedbackDialog = true
+            },
+            text = "Feedback",
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.End)
+        )
+
+        Spacer(modifier = Modifier.height(theme.spacing.times(4)))
+
+        LottaButton(
             onClick = { modelData.removeCurrentSession() },
             text = "Abmelden",
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
         )
     }
 }
