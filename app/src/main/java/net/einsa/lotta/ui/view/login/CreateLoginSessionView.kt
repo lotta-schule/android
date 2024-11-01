@@ -1,10 +1,13 @@
 package net.einsa.lotta.ui.view.login
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -100,163 +103,182 @@ fun CreateLoginSessionView(
         }
     }
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                colors = topAppBarColors(
-                    containerColor = Color(theme.boxBackgroundColor.toArgb()),
-                    titleContentColor = Color(theme.textColor.toArgb()),
-                ),
-                title = {
-                    Text("Anmelden")
-                },
-                actions = {
-                    onDismiss?.let {
-                        IconButton(onClick = { it.invoke() }) {
-                            Icon(imageVector = Icons.Filled.Clear, contentDescription = "Schließen")
-                        }
-                    }
-                }
-            )
-        },
-        containerColor = Color(theme.boxBackgroundColor.toArgb()),
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
-    ) { innerPadding ->
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .padding(innerPadding)
-                .background(Color(theme.boxBackgroundColor.toArgb()))
-        ) {
-            selectedTenantDescriptor?.logoImageFileId?.let { logoImageFileId ->
-                val descriptor = selectedTenantDescriptor!!
-                val url = logoImageFileId.getUrl(
-                    Tenant(
-                        id = descriptor.id.toString(),
-                        slug = descriptor.slug,
-                        title = descriptor.title,
-                    ), mapOf(
-                        "width" to "400",
-                    )
-                )
-
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(url)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Logo von ${descriptor.title}",
-                    placeholder = painterResource(id = R.drawable.wort_bild_marke_logo),
-                    modifier = Modifier
-                        .padding(bottom = theme.spacing)
-                        .heightIn(
-                            max = 200.dp
-                        )
-                        .fillMaxWidth(0.75f),
-                    contentScale = ContentScale.Fit
-                )
-            }
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text(text = "E-Mail") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        scope.launch {
-                            vm.updatePossibleTenants(
-                                email,
-                                excludingSessions = modelData.userSessions
-                            )
-                        }
-                    }
-                ),
-                modifier = Modifier
-                    .padding(horizontal = Dp(8.0F))
-                    .fillMaxWidth()
-                    .onKeyEvent { keyEvent ->
-                        if (keyEvent.key.keyCode == Key.Enter.keyCode) {
-                            scope.launch {
-                                vm.updatePossibleTenants(
-                                    email,
-                                    excludingSessions = modelData.userSessions
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .padding(vertical = theme.spacing)
+            .background(Color(theme.boxBackgroundColor.toArgb()))
+            .fillMaxSize()
+    ) {
+        Scaffold(
+            modifier = modifier.widthIn(max = 500.dp),
+            topBar = {
+                TopAppBar(
+                    colors = topAppBarColors(
+                        containerColor = Color(theme.boxBackgroundColor.toArgb()),
+                        titleContentColor = Color(theme.textColor.toArgb()),
+                    ),
+                    title = {
+                        Text("Anmelden")
+                    },
+                    actions = {
+                        onDismiss?.let {
+                            IconButton(onClick = { it.invoke() }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Clear,
+                                    contentDescription = "Schließen"
                                 )
                             }
-                            return@onKeyEvent true
-                        } else {
-                            return@onKeyEvent false
-                        }
-                    }
-            )
-
-            if (selectedTenantDescriptor == null) {
-                LottaButton(
-                    disabled = email.isEmpty(),
-                    modifier = Modifier
-                        .padding(theme.spacing),
-                    isLoading = vm.isLoading,
-                    text = "weiter",
-                    onClick = {
-                        focusManager.clearFocus()
-                        scope.launch {
-                            vm.updatePossibleTenants(
-                                email,
-                                excludingSessions = modelData.userSessions
-                            )
                         }
                     }
                 )
-            }
+            },
+            containerColor = Color(theme.boxBackgroundColor.toArgb()),
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
+            },
+        ) { innerPadding ->
 
-            if (vm.availableTenantDescriptors.isNotEmpty() && selectedTenantDescriptor == null) {
-                ModalBottomSheet(onDismissRequest = { email = "" }) {
-                    Column {
-                        vm.availableTenantDescriptors.forEach { tenantDescriptor ->
-                            TextButton(
-                                onClick = {
-                                    selectedTenantDescriptor = tenantDescriptor
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            ) {
-                                Text(tenantDescriptor.title)
+            Box(
+                propagateMinConstraints = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .widthIn(max = 600.dp)
+                ) {
+                    if (selectedTenantDescriptor?.logoImageFileId != null) {
+                        val descriptor = selectedTenantDescriptor!!
+                        val url = selectedTenantDescriptor!!.logoImageFileId!!.getUrl(
+                            Tenant(
+                                id = descriptor.id.toString(),
+                                slug = descriptor.slug,
+                                title = descriptor.title,
+                            ), mapOf(
+                                "width" to "400",
+                            )
+                        )
+
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(url)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Logo von ${descriptor.title}",
+                            placeholder = painterResource(id = R.drawable.wort_bild_marke_logo),
+                            modifier = Modifier
+                                .padding(bottom = theme.spacing)
+                                .heightIn(
+                                    max = 200.dp
+                                )
+                                .fillMaxWidth(0.75f),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("E-Mail") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                scope.launch {
+                                    vm.updatePossibleTenants(
+                                        email,
+                                        excludingSessions = modelData.userSessions
+                                    )
+                                }
+                            }
+                        ),
+                        modifier = Modifier
+                            .padding(horizontal = Dp(8.0F))
+                            .fillMaxWidth(.85F)
+                            .onKeyEvent { keyEvent ->
+                                if (keyEvent.key.keyCode == Key.Enter.keyCode) {
+                                    scope.launch {
+                                        vm.updatePossibleTenants(
+                                            email,
+                                            excludingSessions = modelData.userSessions
+                                        )
+                                    }
+                                    return@onKeyEvent true
+                                } else {
+                                    return@onKeyEvent false
+                                }
+                            }
+                    )
+
+                    if (selectedTenantDescriptor == null) {
+                        LottaButton(
+                            disabled = email.isEmpty(),
+                            modifier = Modifier
+                                .padding(theme.spacing)
+                                .fillMaxWidth(.85F),
+                            isLoading = vm.isLoading,
+                            text = "weiter",
+                            onClick = {
+                                focusManager.clearFocus()
+                                scope.launch {
+                                    vm.updatePossibleTenants(
+                                        email,
+                                        excludingSessions = modelData.userSessions
+                                    )
+                                }
+                            }
+                        )
+                    }
+
+                    if (vm.availableTenantDescriptors.isNotEmpty() && selectedTenantDescriptor == null) {
+                        ModalBottomSheet(onDismissRequest = { email = "" }) {
+                            Column {
+                                vm.availableTenantDescriptors.forEach { tenantDescriptor ->
+                                    TextButton(
+                                        onClick = {
+                                            selectedTenantDescriptor = tenantDescriptor
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                    ) {
+                                        Text(tenantDescriptor.title)
+                                    }
+                                }
                             }
                         }
+                    }
+
+                    if (selectedTenantDescriptor != null) {
+                        UserAuthPasswordTextField(
+                            password,
+                            onValueChange = { password = it },
+                            onSubmit = { onSubmit() },
+                            modifier = Modifier
+                                .padding(horizontal = Dp(8.0F))
+                                .fillMaxWidth(.85F)
+                        )
+                    }
+
+                    if (selectedTenantDescriptor != null) {
+                        LottaButton(
+                            disabled = email.isEmpty() || password.isEmpty(),
+                            isLoading = vm.isLoading,
+                            modifier = Modifier
+                                .padding(theme.spacing),
+                            text = "Anmelden",
+                            onClick = {
+                                onSubmit()
+                            }
+                        )
                     }
                 }
             }
 
-            if (selectedTenantDescriptor != null) {
-                UserAuthPasswordTextField(
-                    password,
-                    onValueChange = { password = it },
-                    onSubmit = { onSubmit() },
-                    modifier = Modifier
-                        .padding(horizontal = Dp(8.0F))
-                        .fillMaxWidth()
-                )
-            }
-
-            if (selectedTenantDescriptor != null) {
-                LottaButton(
-                    disabled = email.isEmpty() || password.isEmpty(),
-                    isLoading = vm.isLoading,
-                    modifier = Modifier
-                        .padding(theme.spacing),
-                    text = "Anmelden",
-                    onClick = {
-                        onSubmit()
-                    }
-                )
-            }
         }
-
     }
 }
 

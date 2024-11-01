@@ -98,9 +98,9 @@ fun MessageBubbleFileRow(
     }
 
     Column(modifier = modifier) {
-        files.filter { it.id != null }.forEach { file ->
+        files.forEach { file ->
             Row {
-                file.id?.getUrl(tenant = tenant)?.let { fileUrl ->
+                file.id.getUrl(tenant = tenant).let { fileUrl ->
                     val thumbnailUrl = "$fileUrl?height=250&width=250&resize=contain"
                     Row(modifier = Modifier
                         .fillMaxWidth()
