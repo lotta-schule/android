@@ -165,9 +165,15 @@ class MainViewModel() : ViewModel() {
         userSession: UserSession
     ) {
         userSession.api.apollo.query(GetConversationsQuery()).watch().collect { response ->
-            response.data?.conversations?.mapNotNull { it?.unreadMessages }
-                ?.reduce { acc, next -> acc + next }
-                ?.let { _newMessageCount.intValue = it }
+            val conversations = response.data?.conversations?.mapNotNull { it?.unreadMessages }
+            if (conversations.isNullOrEmpty()) {
+                _newMessageCount.intValue = 0
+                return@collect
+            } else {
+                conversations
+                    .reduce { acc, next -> acc + next }
+                    .let { _newMessageCount.intValue = it }
+            }
         }
     }
 

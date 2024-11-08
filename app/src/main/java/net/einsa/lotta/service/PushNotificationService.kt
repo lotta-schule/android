@@ -5,6 +5,8 @@ import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.content.ContextCompat
@@ -108,24 +110,28 @@ class PushNotificationService {
                     Manifest.permission.POST_NOTIFICATIONS
                 )
             ) {
-                AlertDialog.Builder(App.context)
-                    .setTitle("Push-Benachrichtigungen")
-                    .setMessage(
-                        """
+                val handler = Handler(Looper.getMainLooper())
+                handler.post {
+                    AlertDialog.Builder(App.context)
+                        .setTitle("Push-Benachrichtigungen")
+                        .setMessage(
+                            """
                         Möchtest du Push-Benachrichtigungen aktivieren?
                         Du kannst diese Einstellung später in den App-Einstellungen ändern.
                         So wirst du benachrichtigt, wenn du eine neue Nachricht erhältst.
                         """.trimIndent()
-                    )
-                    .setIcon(android.R.drawable.ic_notification_overlay)
-                    .setPositiveButton("aktivieren") { _: DialogInterface, _: Int ->
-                        App.mainActivity.requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                    .setNegativeButton("überspringen", null)
-                    .show()
+                        )
+                        .setIcon(android.R.drawable.ic_notification_overlay)
+                        .setPositiveButton("aktivieren") { _: DialogInterface, _: Int ->
+                            App.mainActivity.requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                        .setNegativeButton("überspringen", null)
+                        .show()
+                }
             } else {
                 App.mainActivity.requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
+
 }
