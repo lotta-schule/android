@@ -148,6 +148,7 @@ dependencies {
     implementation("com.apollographql.apollo3:apollo-normalized-cache-sqlite:3.8.2")
     implementation("com.google.firebase:firebase-messaging-ktx:24.0.3")
     implementation("androidx.compose.material3.adaptive:adaptive-android:1.0.0")
+    implementation("androidx.compose.material:material-icons-extended:1.7.5")
     implementation("androidx.compose.ui:ui-test-android:1.7.5")
 
     testImplementation("junit:junit:4.13.2")

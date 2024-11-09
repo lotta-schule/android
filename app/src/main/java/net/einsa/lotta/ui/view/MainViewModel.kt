@@ -3,15 +3,17 @@ package net.einsa.lotta.ui.view
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.ViewModel
+import com.apollographql.apollo3.api.Optional
 import com.apollographql.apollo3.cache.normalized.FetchPolicy
 import com.apollographql.apollo3.cache.normalized.apolloStore
 import com.apollographql.apollo3.cache.normalized.fetchPolicy
 import com.apollographql.apollo3.cache.normalized.watch
+import kotlinx.coroutines.flow.collectLatest
 import net.einsa.lotta.GetConversationQuery
 import net.einsa.lotta.GetConversationsQuery
 import net.einsa.lotta.ReceiveMessageSubscription
 import net.einsa.lotta.SearchUsersQuery
-import net.einsa.lotta.composition.UserSession
+import net.einsa.lotta.composition.ModelData
 import net.einsa.lotta.model.Group
 import net.einsa.lotta.model.ID
 import net.einsa.lotta.model.getUrl
@@ -19,11 +21,17 @@ import net.einsa.lotta.ui.view.messaging.NewMessageDestination
 import net.einsa.lotta.util.UserUtil
 
 class MainViewModel() : ViewModel() {
+    private val modelData = ModelData.instance
+
     private val _newMessageCount = mutableIntStateOf(0)
     val newMessageCount
         get() = _newMessageCount.intValue
+    private val _otherNewMessageCount = mutableIntStateOf(0)
+    val otherNewMessageCount
+        get() = _otherNewMessageCount.intValue
 
-    suspend fun subscribeToMessages(session: UserSession) {
+    suspend fun subscribeToMessages() {
+        val session = modelData.currentSession!!
         try {
             session.api.apollo.subscription(ReceiveMessageSubscription()).toFlow().collect { data ->
 
@@ -101,12 +109,16 @@ class MainViewModel() : ViewModel() {
                         val conversation =
                             session.api.apollo.apolloStore.readOperation(
                                 GetConversationQuery(
-                                    message.conversation?.id!!
+                                    message.conversation.id!!,
+                                    markAsRead = Optional.present(true)
                                 )
                             ).conversation
 
                         session.api.apollo.apolloStore.writeOperation(
-                            GetConversationQuery(message.conversation.id),
+                            GetConversationQuery(
+                                message.conversation.id,
+                                markAsRead = Optional.present(true)
+                            ),
                             GetConversationQuery.Data(
                                 GetConversationQuery.Conversation(
                                     id = conversation?.id,
@@ -155,34 +167,41 @@ class MainViewModel() : ViewModel() {
                     }
 
                 }
+
+                updateNewMessageCounts()
             }
         } catch (e: Exception) {
             Log.e("MainViewModel", "Error in subscription", e)
         }
     }
 
-    suspend fun watchNewMessageCount(
-        userSession: UserSession
-    ) {
-        userSession.api.apollo.query(GetConversationsQuery()).watch().collect { response ->
-            val conversations = response.data?.conversations?.mapNotNull { it?.unreadMessages }
-            if (conversations.isNullOrEmpty()) {
-                _newMessageCount.intValue = 0
-                return@collect
-            } else {
-                conversations
-                    .reduce { acc, next -> acc + next }
-                    .let { _newMessageCount.intValue = it }
+    suspend fun updateNewMessageCounts(ignoringConversationId: ID? = null) {
+        val currentSession = modelData.currentSession!!
+        val otherSessions = modelData.userSessions
+            .filter {
+                it.tenant.id != currentSession.tenant.id || it.user.id != currentSession.user.id
             }
-        }
+
+        _newMessageCount.intValue =
+            currentSession.getCurrentUnreadMessages(ignoringConversationId)
+        _otherNewMessageCount.intValue = otherSessions.sumOf { it.getCurrentUnreadMessages() }
+    }
+
+    suspend fun watchNewMessageCount() {
+        val userSession = modelData.currentSession!!
+        userSession.api.apollo
+            .query(GetConversationsQuery())
+            .watch().collectLatest {
+                updateNewMessageCounts()
+            }
     }
 
     suspend fun onCreateNewMessage(
         destination: NewMessageDestination,
         user: SearchUsersQuery.User?,
-        group: Group?,
-        session: UserSession
+        group: Group?
     ): String {
+        val session = ModelData.instance.currentSession!!
         when (destination) {
             NewMessageDestination.GROUP -> {
                 runCatching {
@@ -235,10 +254,15 @@ class MainViewModel() : ViewModel() {
     }
 
     suspend fun getConversation(
-        conversationId: ID,
-        session: UserSession
+        conversationId: ID
     ): GetConversationQuery.Conversation? {
-        return session.api.apollo.query(GetConversationQuery(conversationId))
+        val session = modelData.currentSession!!
+        return session.api.apollo.query(
+            GetConversationQuery(
+                conversationId,
+                markAsRead = Optional.present(true)
+            )
+        )
             .fetchPolicy(FetchPolicy.CacheFirst)
             .execute().data?.conversation
     }

@@ -82,9 +82,20 @@ fun MainView(vm: MainViewModel = viewModel()) {
 
     val canCreateMessage = currentScreen.route == MainScreen.CONVERSATIONS.route
 
+    val currentlySelectedConversationId =
+        backStackEntry.value?.arguments?.getString("conversationId")
+
+    DisposableEffect(currentlySelectedConversationId, backStackEntry.value?.id) {
+        val job = scope.launch {
+            vm.updateNewMessageCounts(ignoringConversationId = currentlySelectedConversationId)
+        }
+
+        onDispose { job.cancel() }
+    }
+
     DisposableEffect(session) {
         val job = scope.launch {
-            vm.subscribeToMessages(session)
+            vm.subscribeToMessages()
         }
 
         onDispose {
@@ -94,7 +105,7 @@ fun MainView(vm: MainViewModel = viewModel()) {
 
     DisposableEffect(session) {
         val job = scope.launch {
-            vm.watchNewMessageCount(session)
+            vm.watchNewMessageCount()
         }
 
         onDispose {
@@ -109,7 +120,7 @@ fun MainView(vm: MainViewModel = viewModel()) {
                 onDismiss = { showNewConversationDialog = false },
                 onSelect = { destination, user, group ->
                     showNewConversationDialog = false
-                    vm.onCreateNewMessage(destination, user, group, session)
+                    vm.onCreateNewMessage(destination, user, group)
                         .let(navController::navigate)
                 })
         }
@@ -152,7 +163,8 @@ fun MainView(vm: MainViewModel = viewModel()) {
         },
         bottomBar = {
             BottomNavigationBar(
-                newMessageCount = vm.newMessageCount,
+                currentNewMessageCount = vm.newMessageCount,
+                otherNewMessageCount = vm.otherNewMessageCount,
                 currentNavDestination = backStackEntry.value?.destination,
                 onSelect = { navController.navigate(it.route) }
             )
@@ -204,7 +216,7 @@ fun MainView(vm: MainViewModel = viewModel()) {
                 val conversationId = extras.getString("conversation_id")
 
                 if (tenantId == session.tenant.id && conversationId != null) {
-                    val conversation = vm.getConversation(conversationId, session)
+                    val conversation = vm.getConversation(conversationId)
                     val user = conversation?.users?.firstOrNull { it.id != session.user.id }
 
                     val imageUrl = user?.avatarImageFile?.id?.getUrl(session.tenant)

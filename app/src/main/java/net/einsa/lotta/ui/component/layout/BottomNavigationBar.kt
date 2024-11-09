@@ -3,8 +3,6 @@ package net.einsa.lotta.ui.component.layout
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -16,11 +14,13 @@ import androidx.core.graphics.ColorUtils
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import net.einsa.lotta.composition.LocalTheme
+import net.einsa.lotta.ui.component.BadgedIcon
 import net.einsa.lotta.ui.view.MainScreen
 
 @Composable
 fun BottomNavigationBar(
-    newMessageCount: Int,
+    currentNewMessageCount: Int,
+    otherNewMessageCount: Int,
     onSelect: (MainScreen) -> Unit,
     currentNavDestination: NavDestination? = null
 ) {
@@ -48,28 +48,11 @@ fun BottomNavigationBar(
                 ?: false,
             onClick = { onSelect(MainScreen.MESSAGING) },
             icon = {
-                if (newMessageCount == 0) {
+                BadgedIcon(currentNewMessageCount) {
                     Icon(
                         imageVector = Icons.Default.MailOutline,
                         contentDescription = null
                     )
-                } else {
-                    BadgedBox(
-                        badge = {
-                            Badge(
-                                containerColor = Color(theme.primaryColor.toArgb()),
-                                contentColor = Color(theme.primaryContrastTextColor.toArgb()),
-                            ) {
-                                Text(
-                                    newMessageCount.toString(),
-                                )
-                            }
-                        }) {
-                        Icon(
-                            imageVector = Icons.Default.MailOutline,
-                            contentDescription = null
-                        )
-                    }
                 }
             },
             label = { MainScreen.MESSAGING.title?.let { Text(it) } },
@@ -80,10 +63,12 @@ fun BottomNavigationBar(
                 ?: false,
             onClick = { onSelect(MainScreen.PROFILE) },
             icon = {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null
-                )
+                BadgedIcon(otherNewMessageCount) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null
+                    )
+                }
             },
             label = { MainScreen.PROFILE.title?.let { Text(it) } },
             colors = colors

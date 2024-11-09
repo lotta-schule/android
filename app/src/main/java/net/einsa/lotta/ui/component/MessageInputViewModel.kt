@@ -116,12 +116,13 @@ class MessageInputViewModel : ViewModel() {
                     val conversation =
                         session.api.apollo.apolloStore.readOperation(
                             GetConversationQuery(
-                                conversationId
+                                conversationId,
+                                markAsRead = Optional.present(true)
                             )
                         ).conversation
 
                     session.api.apollo.apolloStore.writeOperation(
-                        GetConversationQuery(conversationId),
+                        GetConversationQuery(conversationId, markAsRead = Optional.present(true)),
                         GetConversationQuery.Data(
                             GetConversationQuery.Conversation(
                                 id = conversationId,

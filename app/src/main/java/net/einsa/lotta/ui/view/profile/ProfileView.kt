@@ -1,52 +1,46 @@
 package net.einsa.lotta.ui.view.profile
 
+import android.content.Intent
+import android.content.pm.PackageInfo
+import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DoorBack
+import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.window.core.layout.WindowSizeClass
 import androidx.window.core.layout.WindowWidthSizeClass.Companion.EXPANDED
-import net.einsa.lotta.GetConversationsQuery
+import net.einsa.lotta.App
+import net.einsa.lotta.api.LOTTA_API_HOST
 import net.einsa.lotta.composition.LocalModelData
 import net.einsa.lotta.composition.LocalTheme
 import net.einsa.lotta.composition.LocalUserSession
-import net.einsa.lotta.composition.UserSession
-import net.einsa.lotta.model.Theme
 import net.einsa.lotta.ui.component.LottaButton
-import net.einsa.lotta.ui.component.UserAvatar
 import net.einsa.lotta.ui.view.login.CreateLoginSessionView
-import net.einsa.lotta.util.UserUtil.Companion.getVisibleName
 
 @Composable
 fun ProfileView(
@@ -63,8 +57,8 @@ fun ProfileView(
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier
-            .fillMaxSize()
             .background(Color(theme.boxBackgroundColor.toArgb()))
+            .fillMaxSize()
     ) {
         if (showLoginDialog) {
             Dialog(
@@ -79,6 +73,7 @@ fun ProfileView(
                         showLoginDialog = false
                         modelData.add(userSession)
                     },
+                    defaultEmail = currentSession.user.email,
                     onDismiss = { showLoginDialog = false },
                     modifier = Modifier.fillMaxHeight(.9f)
                 )
@@ -100,18 +95,21 @@ fun ProfileView(
         }
 
         Column(
+            verticalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .widthIn(min = 300.dp, max = 500.dp)
                 .fillMaxHeight()
                 .padding(theme.spacing)
                 .background(Color(theme.boxBackgroundColor.toArgb()))
+                .verticalScroll(rememberScrollState())
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .widthIn(min = 300.dp, max = 500.dp)
             ) {
                 Text("Angemeldet als:", modifier = Modifier.fillMaxWidth())
-                Box(Modifier.padding(top = theme.spacing)) {
+                Column(Modifier.padding(top = theme.spacing)) {
                     modelData.userSessions.forEach { session ->
                         UserSessionListItem(
                             session = session,
@@ -128,112 +126,72 @@ fun ProfileView(
                         )
                     }
                 }
+
+                LottaButton(
+                    onClick = {
+                        showLoginDialog = true
+                    },
+                    text = "Account hinzufügen",
+                    icon = {
+                        Icon(Icons.Outlined.PersonAdd, null)
+                    }
+                )
+                LottaButton(
+                    onClick = { modelData.removeCurrentSession() },
+                    text = "Abmelden",
+                    icon = {
+                        Icon(Icons.Outlined.DoorBack, null)
+                    },
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(theme.spacing.times(2)))
-
-            LottaButton(
-                onClick = {
-                    showLoginDialog = true
-                },
-                text = "Account hinzufügen",
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(theme.spacing.times(2)))
-
-            LottaButton(
-                onClick = {
-                    showFeedbackDialog = true
-                },
-                text = "Feedback",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.End)
-            )
-
-            Spacer(modifier = Modifier.height(theme.spacing.times(4)))
-
-            LottaButton(
-                onClick = { modelData.removeCurrentSession() },
-                text = "Abmelden",
-                modifier = Modifier
-                    .fillMaxWidth()
-            )
+            Column {
+                Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Version:")
+                    Text(getAppVersion())
+                }
+                Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("API Endpunkt:")
+                    Text(LOTTA_API_HOST)
+                }
+                LottaButton(
+                    onClick = {
+                        showFeedbackDialog = true
+                    },
+                    text = "Feedback",
+                    modifier = Modifier
+                        .padding(bottom = 2.dp)
+                )
+                LottaButton(
+                    onClick = {
+                        val browserIntent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://github.com/lotta-schule/android")
+                        )
+                        App.mainActivity.startActivity(browserIntent)
+                    },
+                    text = "Quelltext anzeigen",
+                )
+            }
         }
 
     }
 }
 
-@Composable
-fun UserSessionListItem(
-    session: UserSession,
-    isSelected: Boolean,
-    onSelect: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val theme = session.tenant.customTheme
-    val defaultTheme = Theme()
-    val badgeCount = remember { mutableIntStateOf(0) }
+fun getAppVersion(): String {
+    val version = getPackageInfo().versionName
+    val build = getPackageInfo().longVersionCode
 
-    LaunchedEffect(key1 = session) {
-        val response = session.api.apollo.query(GetConversationsQuery()).execute()
-        badgeCount.intValue =
-            response.data?.conversations?.sumOf { it?.unreadMessages ?: 0 } ?: 0
-    }
+    return "$version ($build)"
+}
 
-    Row(
-        modifier = modifier
-            .border(
-                width = 1.dp,
-                brush = Brush.horizontalGradient(
-                    listOf(
-                        Color(theme.dividerColor.toArgb()),
-                        Color(theme.dividerColor.toArgb())
-                    )
-                ),
-                shape = RoundedCornerShape(theme.borderRadius)
-            )
-            .background(
-                if (isSelected) {
-                    Color(theme.primaryColor.toArgb()).copy(alpha = .1f)
-                } else {
-                    Color(theme.boxBackgroundColor.toArgb())
-                }
-            )
-            .padding(defaultTheme.spacing)
-            .clickable { onSelect() },
-    ) {
-        if (badgeCount.intValue > 0) {
-            BadgedBox(
-                modifier = Modifier.padding(end = defaultTheme.spacing),
-                badge = {
-                    Badge(
-                        containerColor = Color(theme.primaryColor.toArgb()),
-                        contentColor = Color(theme.primaryContrastTextColor.toArgb()),
-                    ) {
-                        Text(
-                            badgeCount.intValue.toString(),
-                        )
-                    }
-                }) {
-                UserAvatar(
-                    session.user,
-                    size = 48,
-                )
-            }
-        } else {
-            UserAvatar(
-                session.user,
-                size = 48,
-            )
-        }
-
-        Column(modifier = Modifier.padding(start = defaultTheme.spacing)) {
-            Text(
-                session.tenant.title, style = TextStyle(fontWeight = FontWeight.Bold)
-            )
-            Text(getVisibleName(session.user), style = TextStyle(fontSize = 12.sp))
-        }
+fun getPackageInfo(): PackageInfo {
+    try {
+        return App.mainActivity.packageManager.getPackageInfo(App.mainActivity.packageName, 0)
+    } catch (e: Exception) {
+        print(e)
+        return PackageInfo()
     }
 }

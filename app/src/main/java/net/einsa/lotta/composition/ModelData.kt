@@ -26,6 +26,9 @@ class ModelData {
     var initialized = false
         private set
 
+    val currentSession: UserSession?
+        get() = userSessions.find { it.tenant.id == currentSessionTenantId.value }
+
     suspend fun initializeSessions() {
         if (!baseCacheDir.exists()) {
             try {

@@ -20,6 +20,7 @@ import net.einsa.lotta.LoginMutation
 import net.einsa.lotta.RegisterDeviceMutation
 import net.einsa.lotta.api.CoreApi
 import net.einsa.lotta.api.baseCacheDir
+import net.einsa.lotta.model.ID
 import net.einsa.lotta.model.Tenant
 import net.einsa.lotta.model.User
 import net.einsa.lotta.service.DeviceIdentificationService
@@ -155,8 +156,6 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
 
     var tenant: Tenant = tenant
         private set
-    var authInfo: AuthInfo = authInfo
-        private set
     var user: User = user
         private set
     var api: CoreApi
@@ -166,6 +165,19 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
 
     init {
         this.api = CoreApi(tenantSlug = tenant.slug, tenantId = tenant.id, loginSession = authInfo)
+    }
+
+    suspend fun getCurrentUnreadMessages(ignoringConversationId: ID? = null): Int {
+        val response = api.apollo
+            .query(GetConversationsQuery())
+            .fetchPolicy(FetchPolicy.CacheFirst)
+            .execute()
+        return response.data?.conversations
+            ?.filter { conversation ->
+                conversation?.id != null && ignoringConversationId != conversation.id
+            }
+            ?.mapNotNull { it?.unreadMessages ?: 0 }
+            ?.reduceOrNull(Int::plus) ?: 0
     }
 
     suspend fun refetchUserData() {
@@ -199,7 +211,7 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
             .fetchPolicy(FetchPolicy.NetworkOnly).execute()
 
         api.apollo.apolloStore.writeOperation(
-            GetConversationQuery(id = conversationId),
+            GetConversationQuery(id = conversationId, markAsRead = Optional.present(true)),
             result.dataAssertNoErrors
         )
     }

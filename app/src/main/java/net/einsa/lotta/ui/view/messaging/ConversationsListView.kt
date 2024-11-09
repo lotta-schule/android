@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,14 +29,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import net.einsa.lotta.GetConversationsQuery
 import net.einsa.lotta.composition.LocalUserSession
-import net.einsa.lotta.type.DateTime
 import net.einsa.lotta.ui.component.Avatar
 import net.einsa.lotta.util.ConversationUtil
 import java.time.Instant
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalField
-import java.util.Date
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -72,7 +67,6 @@ fun ConversationsList(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationListItemView(
     conversation: GetConversationsQuery.Conversation,

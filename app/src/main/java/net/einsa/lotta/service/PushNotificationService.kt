@@ -10,6 +10,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.content.ContextCompat
+import com.apollographql.apollo3.api.Optional
 import com.apollographql.apollo3.cache.normalized.apolloStore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
@@ -76,11 +77,15 @@ class PushNotificationService {
                             runCatching {
                                 session.api.apollo.apolloStore.readOperation(
                                     GetConversationQuery(
-                                        conversationId
+                                        conversationId,
+                                        markAsRead = Optional.present(true)
                                     )
                                 ).conversation?.let { conversation ->
                                     session.api.apollo.apolloStore.writeOperation(
-                                        GetConversationQuery(conversationId),
+                                        GetConversationQuery(
+                                            conversationId,
+                                            markAsRead = Optional.present(true)
+                                        ),
                                         GetConversationQuery.Data(conversation.copy(unreadMessages = 0))
                                     )
                                 }

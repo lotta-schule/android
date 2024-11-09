@@ -68,6 +68,7 @@ import net.einsa.lotta.ui.component.LottaButton
 fun CreateLoginSessionView(
     modifier: Modifier = Modifier,
     vm: CreateLoginSessionViewModel = viewModel(),
+    defaultEmail: String? = null,
     onLogin: (UserSession) -> Unit = {},
     onDismiss: (() -> Unit)? = null,
 ) {
@@ -76,7 +77,7 @@ fun CreateLoginSessionView(
 
     val theme = remember { Theme() }
 
-    var email by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf(defaultEmail ?: "") }
     var password by remember { mutableStateOf("") }
     var selectedTenantDescriptor by remember { mutableStateOf<TenantDescriptor?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
