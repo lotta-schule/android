@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.einsa.lotta.MainActivity
 import net.einsa.lotta.composition.ModelData
 
 class RootViewModel : ViewModel() {
@@ -15,10 +16,10 @@ class RootViewModel : ViewModel() {
     val initialized: Boolean
         get() = _initialized.value
 
-    suspend fun init(modelData: ModelData) {
+    suspend fun init(activity: MainActivity, modelData: ModelData) {
         _didStartInitialization.value = true
         return withContext(Dispatchers.IO) {
-            modelData.initializeSessions()
+            modelData.initializeSessions(activity)
             _initialized.value = true
         }
     }

@@ -11,12 +11,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import net.einsa.lotta.MainActivity
 import net.einsa.lotta.composition.LocalModelData
 import net.einsa.lotta.ui.view.login.CreateLoginSessionView
 import java.util.logging.Logger
 
 @Composable
-fun RootView(vm: RootViewModel = viewModel()) {
+fun RootView(mainActivity: MainActivity, vm: RootViewModel = viewModel()) {
     var showDialog by remember { mutableStateOf(false) }
     val modelData = LocalModelData.current
 
@@ -61,7 +62,7 @@ fun RootView(vm: RootViewModel = viewModel()) {
 
     LaunchedEffect(Unit) {
         if (!vm.initialized && !vm.didStartInitialization) {
-            vm.init(modelData)
+            vm.init(mainActivity, modelData)
         }
     }
 }

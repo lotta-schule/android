@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 import net.einsa.lotta.App
 import net.einsa.lotta.GetConversationQuery
 import net.einsa.lotta.GetConversationsQuery
+import net.einsa.lotta.MainActivity
 import net.einsa.lotta.composition.ModelData
 
 class PushNotificationService {
@@ -98,43 +99,45 @@ class PushNotificationService {
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    fun startReceivingNotifications() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    App.mainActivity,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) ==
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                Log.d("MainActivity", "Permission for push notifications granted")
-                GlobalScope.launch {
-                    registerDeviceToken()
-                }
-            } else if (shouldShowRequestPermissionRationale(
-                    App.mainActivity,
-                    Manifest.permission.POST_NOTIFICATIONS
-                )
-            ) {
-                val handler = Handler(Looper.getMainLooper())
-                handler.post {
-                    AlertDialog.Builder(App.context)
-                        .setTitle("Push-Benachrichtigungen")
-                        .setMessage(
-                            """
+    fun startReceivingNotifications(activity: MainActivity) {
+        activity.runOnUiThread {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(
+                        App.mainActivity,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) ==
+                    PackageManager.PERMISSION_GRANTED
+                ) {
+                    Log.d("MainActivity", "Permission for push notifications granted")
+                    GlobalScope.launch {
+                        registerDeviceToken()
+                    }
+                } else if (shouldShowRequestPermissionRationale(
+                        activity,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                ) {
+                    val handler = Handler(Looper.getMainLooper())
+                    handler.post {
+                        AlertDialog.Builder(activity)
+                            .setTitle("Push-Benachrichtigungen")
+                            .setMessage(
+                                """
                         Möchtest du Push-Benachrichtigungen aktivieren?
                         Du kannst diese Einstellung später in den App-Einstellungen ändern.
                         So wirst du benachrichtigt, wenn du eine neue Nachricht erhältst.
                         """.trimIndent()
-                        )
-                        .setIcon(android.R.drawable.ic_notification_overlay)
-                        .setPositiveButton("aktivieren") { _: DialogInterface, _: Int ->
-                            App.mainActivity.requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                        .setNegativeButton("überspringen", null)
-                        .show()
+                            )
+                            .setIcon(android.R.drawable.stat_notify_chat)
+                            .setPositiveButton("aktivieren") { _: DialogInterface, _: Int ->
+                                activity.requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                            .setNegativeButton("überspringen", null)
+                            .show()
+                    }
+                } else {
+                    activity.requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
-            } else {
-                App.mainActivity.requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }

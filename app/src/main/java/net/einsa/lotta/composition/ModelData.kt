@@ -7,6 +7,8 @@ import io.sentry.Sentry
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import net.einsa.lotta.App
+import net.einsa.lotta.MainActivity
 import net.einsa.lotta.api.baseCacheDir
 import net.einsa.lotta.model.ID
 import net.einsa.lotta.service.PushNotificationService
@@ -29,7 +31,7 @@ class ModelData {
     val currentSession: UserSession?
         get() = userSessions.find { it.tenant.id == currentSessionTenantId.value }
 
-    suspend fun initializeSessions() {
+    suspend fun initializeSessions(activity: MainActivity? = null) {
         if (!baseCacheDir.exists()) {
             try {
                 baseCacheDir.mkdirs()
@@ -50,8 +52,8 @@ class ModelData {
             }
         }
 
-        if (userSessions.isNotEmpty()) {
-            PushNotificationService.instance.startReceivingNotifications()
+        if (userSessions.isNotEmpty() && activity != null) {
+            PushNotificationService.instance.startReceivingNotifications(activity = activity)
         }
 
         Sentry.configureScope { scope ->
@@ -102,7 +104,13 @@ class ModelData {
         userSessions.add(session)
         setSession(tenantId = session.tenant.id)
 
-        PushNotificationService.instance.startReceivingNotifications()
+        try {
+            PushNotificationService.instance.startReceivingNotifications(App.mainActivity)
+        } catch (e: Exception) {
+            println("Failed to start receiving notifications")
+            println(e)
+            Sentry.captureException(e)
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class)

@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = Color.White
                     ) {
-                        RootView()
+                        RootView(mainActivity = this)
                     }
                 }
             }
