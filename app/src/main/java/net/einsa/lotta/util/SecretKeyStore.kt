@@ -33,7 +33,9 @@ class SecretKeyStore(storeName: String = "lotta-auth") {
     }
 
     fun set(key: String, value: String) {
-        sharedPreferences.edit().putString(key, value).apply()
+        synchronized(sharedPreferences) {
+            sharedPreferences.edit().putString(key, value).apply()
+        }
     }
 
     fun remove(key: String) {
