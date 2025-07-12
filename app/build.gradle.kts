@@ -35,7 +35,7 @@ android {
         applicationId = "net.einsa.lotta"
         minSdk = 28
         targetSdk = 34
-        versionCode = 20
+        versionCode = 21
         versionName = "0.12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
