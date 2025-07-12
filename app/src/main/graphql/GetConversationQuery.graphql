@@ -13,6 +13,10 @@ query GetConversationQuery($id: ID!, $markAsRead: Boolean) {
       nickname
       avatarImageFile {
         id
+        formats(category: "AVATAR") {
+          name
+          url
+        }
       }
     }
     messages {
@@ -25,6 +29,11 @@ query GetConversationQuery($id: ID!, $markAsRead: Boolean) {
         filename
         fileType
         filesize
+        id
+        formats(category: "PREVIEW") {
+          name
+          url
+        }
       }
       user {
         id
@@ -32,6 +41,10 @@ query GetConversationQuery($id: ID!, $markAsRead: Boolean) {
         nickname
         avatarImageFile {
           id
+          formats(category: "AVATAR") {
+            name
+            url
+          }
         }
       }
     }
@@ -54,6 +67,10 @@ query AddMessageToConversationLocalCacheMutation($id: ID!)
       nickname
       avatarImageFile {
         id
+        formats(category: "AVATAR") {
+          name
+          url
+        }
       }
     }
     messages {
@@ -66,6 +83,10 @@ query AddMessageToConversationLocalCacheMutation($id: ID!)
         filename
         fileType
         filesize
+        formats(category: "AVATAR") {
+          name
+          url
+        }
       }
       user {
         id
@@ -73,6 +94,10 @@ query AddMessageToConversationLocalCacheMutation($id: ID!)
         nickname
         avatarImageFile {
           id
+          formats(category: "AVATAR") {
+            name
+            url
+          }
         }
       }
     }

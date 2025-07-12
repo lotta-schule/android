@@ -8,7 +8,7 @@ data class TenantDescriptor(
     val title: String,
     val slug: String,
     val logoImageFileId: ID?,
-    val backgroundImageFileId: ID?
+    val backgroundImageFileId: ID?,
 )
 
 @Serializable()

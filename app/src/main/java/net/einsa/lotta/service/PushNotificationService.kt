@@ -2,13 +2,13 @@ package net.einsa.lotta.service
 
 import android.Manifest
 import android.app.AlertDialog
+import android.content.Context.MODE_PRIVATE
 import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.content.ContextCompat
 import com.apollographql.apollo3.api.Optional
 import com.apollographql.apollo3.cache.normalized.apolloStore
@@ -30,6 +30,8 @@ class PushNotificationService {
     companion object {
         val instance = PushNotificationService()
     }
+
+    val sharedPreference = App.mainActivity.getSharedPreferences("permissions", MODE_PRIVATE);
 
     suspend fun registerDeviceToken() {
         val token = FirebaseMessaging.getInstance().token.await()
@@ -112,34 +114,37 @@ class PushNotificationService {
                     GlobalScope.launch {
                         registerDeviceToken()
                     }
-                } else if (shouldShowRequestPermissionRationale(
-                        activity,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    )
-                ) {
-                    val handler = Handler(Looper.getMainLooper())
-                    handler.post {
-                        AlertDialog.Builder(activity)
-                            .setTitle("Push-Benachrichtigungen")
-                            .setMessage(
-                                """
+                } else if (!hasAlreadyRequestedPushNotifications()) {
+                    if (!sharedPreference.getBoolean("push_notifications_requested", false)) {
+                        val handler = Handler(Looper.getMainLooper())
+                        handler.post {
+                            AlertDialog.Builder(activity)
+                                .setTitle("Push-Benachrichtigungen")
+                                .setMessage(
+                                    """
                         Möchtest du Push-Benachrichtigungen aktivieren?
                         Du kannst diese Einstellung später in den App-Einstellungen ändern.
                         So wirst du benachrichtigt, wenn du eine neue Nachricht erhältst.
                         """.trimIndent()
-                            )
-                            .setIcon(android.R.drawable.stat_notify_chat)
-                            .setPositiveButton("aktivieren") { _: DialogInterface, _: Int ->
-                                activity.requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            }
-                            .setNegativeButton("überspringen", null)
-                            .show()
+                                )
+                                .setIcon(android.R.drawable.stat_notify_chat)
+                                .setPositiveButton("aktivieren") { _: DialogInterface, _: Int ->
+                                    activity.requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                                .setNegativeButton("überspringen", null)
+                                .show()
+                        }
                     }
-                } else {
-                    activity.requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
         }
     }
 
+    fun hasAlreadyRequestedPushNotifications(): Boolean {
+        return sharedPreference.getBoolean("push_notifications_requested", false)
+    }
+
+    fun setPushNotificationsRequested(value: Boolean = true) {
+        sharedPreference.edit().putBoolean("push_notifications_requested", value).apply()
+    }
 }

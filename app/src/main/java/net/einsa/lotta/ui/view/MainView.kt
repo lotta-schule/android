@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
 import net.einsa.lotta.App
 import net.einsa.lotta.composition.LocalTheme
 import net.einsa.lotta.composition.LocalUserSession
-import net.einsa.lotta.model.getUrl
 import net.einsa.lotta.ui.component.Avatar
 import net.einsa.lotta.ui.component.UserAvatar
 import net.einsa.lotta.ui.component.layout.BottomNavigationBar
@@ -219,7 +218,7 @@ fun MainView(vm: MainViewModel = viewModel()) {
                     val conversation = vm.getConversation(conversationId)
                     val user = conversation?.users?.firstOrNull { it.id != session.user.id }
 
-                    val imageUrl = user?.avatarImageFile?.id?.getUrl(session.tenant)
+                    val imageUrl = user?.avatarImageFile?.formats?.find { true }?.url
                     navController.navigate(
                         MainScreen.CONVERSATION.route
                             .replace("{conversationId}", conversationId)

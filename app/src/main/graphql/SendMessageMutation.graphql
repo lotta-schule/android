@@ -10,6 +10,9 @@ mutation SendMessage($message: MessageInput!) {
       nickname
       avatarImageFile {
         id
+        formats(category: "AVATAR") {
+          url
+        }
       }
     }
     files {
@@ -25,6 +28,9 @@ mutation SendMessage($message: MessageInput!) {
         nickname
         avatarImageFile {
           id
+          formats(category: "AVATAR") {
+            url
+          }
         }
       }
       groups {

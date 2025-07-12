@@ -56,10 +56,9 @@ import kotlinx.coroutines.launch
 import net.einsa.lotta.R
 import net.einsa.lotta.composition.LocalModelData
 import net.einsa.lotta.composition.UserSession
-import net.einsa.lotta.model.Tenant
 import net.einsa.lotta.model.TenantDescriptor
 import net.einsa.lotta.model.Theme
-import net.einsa.lotta.model.getUrl
+import net.einsa.lotta.model.getDownloadUrl
 import net.einsa.lotta.ui.component.LottaButton
 
 
@@ -154,15 +153,10 @@ fun CreateLoginSessionView(
                 ) {
                     if (selectedTenantDescriptor?.logoImageFileId != null) {
                         val descriptor = selectedTenantDescriptor!!
-                        val url = selectedTenantDescriptor!!.logoImageFileId!!.getUrl(
-                            Tenant(
-                                id = descriptor.id.toString(),
-                                slug = descriptor.slug,
-                                title = descriptor.title,
-                            ), mapOf(
-                                "width" to "400",
+                        val url = selectedTenantDescriptor!!.logoImageFileId!!
+                            .getDownloadUrl(
+                                descriptor, "download"
                             )
-                        )
 
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)

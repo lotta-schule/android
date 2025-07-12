@@ -29,7 +29,7 @@ import coil.request.ImageRequest
 import net.einsa.lotta.GetConversationQuery
 import net.einsa.lotta.R
 import net.einsa.lotta.composition.LocalUserSession
-import net.einsa.lotta.model.getUrl
+import net.einsa.lotta.model.getDownloadUrl
 import net.einsa.lotta.type.FileType
 
 @Composable
@@ -100,8 +100,8 @@ fun MessageBubbleFileRow(
     Column(modifier = modifier) {
         files.forEach { file ->
             Row {
-                file.id.getUrl(tenant = tenant).let { fileUrl ->
-                    val thumbnailUrl = "$fileUrl?height=250&width=250&resize=contain"
+                file.id.getDownloadUrl(tenant = tenant).let { fileUrl ->
+                    val thumbnailUrl = file.formats.first { it.name.name.startsWith("AVATAR_") }
                     Row(modifier = Modifier
                         .fillMaxWidth()
                         .clickable { openFileUrl(fileUrl, file.fileType) }) {

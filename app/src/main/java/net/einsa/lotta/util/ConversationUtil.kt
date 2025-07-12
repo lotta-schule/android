@@ -2,7 +2,6 @@ package net.einsa.lotta.util
 
 import net.einsa.lotta.GetConversationsQuery
 import net.einsa.lotta.model.Tenant
-import net.einsa.lotta.model.getUrl
 
 sealed class ConversationUtil {
     companion object {
@@ -11,9 +10,9 @@ sealed class ConversationUtil {
             excludingUserId: String,
             tenant: Tenant
         ): String? {
-            return conversation.users?.find { it.id != excludingUserId }?.avatarImageFile?.id?.getUrl(
-                tenant
-            )
+            return conversation.users?.find {
+                it.id != excludingUserId
+            }?.avatarImageFile?.formats?.find { true }?.url
         }
 
         fun getTitle(

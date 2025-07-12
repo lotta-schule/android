@@ -14,7 +14,6 @@ import coil.request.ImageRequest
 import net.einsa.lotta.composition.LocalTheme
 import net.einsa.lotta.composition.LocalUserSession
 import net.einsa.lotta.composition.UserSession
-import net.einsa.lotta.model.getUrl
 import net.einsa.lotta.ui.theme.LottaTheme
 
 @Composable
@@ -29,10 +28,10 @@ fun TenantRootView(
                         .fillMaxSize()
                         .background(Color.Red)
                 ) {
-                    session.tenant.backgroundImageFileId?.let {
+                    session.tenant.backgroundImageUrl?.let {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
-                                .data(it.getUrl(session.tenant, mapOf("width" to "1200")))
+                                .data(it)
                                 .build(),
                             contentDescription = null,
                             modifier = Modifier.fillMaxSize(),

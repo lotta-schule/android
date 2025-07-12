@@ -7,9 +7,17 @@ query GetTenant {
     configuration {
       backgroundImageFile {
         id
+        formats(category: "AVATAR") {
+          name
+          url
+        }
       }
       logoImageFile {
         id
+        formats(category: "AVATAR") {
+          name
+          url
+        }
       }
       customTheme
       userMaxStorageConfig

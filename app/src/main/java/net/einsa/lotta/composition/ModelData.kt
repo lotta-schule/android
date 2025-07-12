@@ -115,14 +115,14 @@ class ModelData {
 
     @OptIn(DelicateCoroutinesApi::class)
     fun remove(session: UserSession) {
-        session.runCatching { removeFromDisk() }
-        session.removeFromKeychain()
-
-        userSessions.removeIf { it.tenant.id == session.tenant.id }
-
         GlobalScope.launch {
-            session.api.resetCache()
             session.deleteDevice()
+
+            session.runCatching {
+                removeFromDisk()
+                removeFromKeychain()
+            }
+            session.api.resetCache()
         }
     }
 

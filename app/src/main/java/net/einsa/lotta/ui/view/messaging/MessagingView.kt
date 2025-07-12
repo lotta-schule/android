@@ -7,7 +7,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import net.einsa.lotta.composition.LocalUserSession
-import net.einsa.lotta.model.getUrl
 import net.einsa.lotta.util.ConversationUtil
 
 @Composable
@@ -26,7 +25,7 @@ fun MessagingView(viewModel: MessagingViewModel = viewModel(), navController: Na
 
     ConversationsList(onSelectConversation = { conversation ->
         val user = conversation.users?.firstOrNull { it.id != userSession.user.id }
-        val imageUrl = user?.avatarImageFile?.id?.getUrl(userSession.tenant)
+        val imageUrl = user?.avatarImageFile?.formats?.find { true }?.url
         navController.navigate(
             "messages/${conversation.id}?title=${
                 ConversationUtil.getTitle(

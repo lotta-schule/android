@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import net.einsa.lotta.composition.LocalUserSession
 import net.einsa.lotta.model.ID
-import net.einsa.lotta.model.getUrl
 import net.einsa.lotta.ui.component.MessageInputView
 import net.einsa.lotta.ui.view.MainScreen
 import net.einsa.lotta.util.UserUtil
@@ -39,7 +38,9 @@ fun NewConversationView(userId: ID?, groupId: ID?, onSent: (path: String) -> Uni
                     UserUtil.getVisibleName(it)
                 } ?: message.conversation.groups?.firstOrNull()?.name ?: "?"
 
-            val imageUrl = user?.avatarImageFile?.id?.getUrl(session.tenant)
+            val imageUrl = user?.avatarImageFile?.formats?.firstOrNull()?.url
+                ?: message.conversation.users?.find { it.id != session.user.id }
+                    ?.avatarImageFile?.formats?.find { true }?.url
 
             onSent(
                 MainScreen.CONVERSATION.route.replace(

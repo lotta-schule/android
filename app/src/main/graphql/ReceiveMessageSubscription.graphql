@@ -9,6 +9,11 @@ subscription ReceiveMessage {
       filename
       fileType
       filesize
+      id
+      formats(category: "PREVIEW") {
+        name
+        url
+      }
     }
     user {
       id
@@ -16,6 +21,10 @@ subscription ReceiveMessage {
       nickname
       avatarImageFile {
         id
+        formats(category: "AVATAR") {
+          name
+          url
+        }
       }
     }
     conversation {
@@ -31,6 +40,10 @@ subscription ReceiveMessage {
         nickname
         avatarImageFile {
           id
+          formats(category: "AVATAR") {
+            name
+            url
+          }
         }
       }
       unreadMessages

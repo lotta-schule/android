@@ -16,7 +16,6 @@ import net.einsa.lotta.SearchUsersQuery
 import net.einsa.lotta.composition.ModelData
 import net.einsa.lotta.model.Group
 import net.einsa.lotta.model.ID
-import net.einsa.lotta.model.getUrl
 import net.einsa.lotta.ui.view.messaging.NewMessageDestination
 import net.einsa.lotta.util.UserUtil
 
@@ -134,18 +133,32 @@ class MainViewModel() : ViewModel() {
                                                     filename = file.filename,
                                                     filesize = file.filesize,
                                                     fileType = file.fileType,
+                                                    formats = file.formats.map { format ->
+                                                        GetConversationQuery.Format1(
+                                                            name = format.name,
+                                                            url = format.url
+                                                        )
+                                                    },
                                                 )
                                             },
+                                            updatedAt = message.updatedAt,
+                                            insertedAt = message.insertedAt,
                                             user = GetConversationQuery.User1(
                                                 id = session.user.id,
                                                 name = session.user.name,
                                                 nickname = session.user.nickname,
-                                                avatarImageFile = session.user.avatarImageFileId?.let { fileId ->
-                                                    GetConversationQuery.AvatarImageFile1(fileId)
+                                                avatarImageFile = session.user.avatarImageFile?.let {
+                                                    GetConversationQuery.AvatarImageFile1(
+                                                        id = it.id,
+                                                        formats = it.formats.map { format ->
+                                                            GetConversationQuery.Format2(
+                                                                name = format.name,
+                                                                url = format.url
+                                                            )
+                                                        }
+                                                    )
                                                 },
-                                            ),
-                                            updatedAt = message.updatedAt,
-                                            insertedAt = message.insertedAt,
+                                            )
                                         )
                                     ).let {
                                         it.addAll(
@@ -159,7 +172,7 @@ class MainViewModel() : ViewModel() {
                                     unreadMessages = message.conversation.unreadMessages
                                         ?: ((conversation?.unreadMessages
                                             ?: 0) + 1),
-                                )
+                                ),
                             )
                         )
                     } catch (e: Exception) {
@@ -239,7 +252,7 @@ class MainViewModel() : ViewModel() {
                                 UserUtil.getVisibleName(user!!)
                             ).replace(
                                 "{imageUrl}",
-                                user.avatarImageFile?.id?.getUrl(session.tenant) ?: ""
+                                user.avatarImageFile?.formats?.find { true }?.url ?: ""
                             )
                         }
                 }

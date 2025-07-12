@@ -137,8 +137,16 @@ class MessageInputViewModel : ViewModel() {
                                             id = session.user.id,
                                             name = session.user.name,
                                             nickname = session.user.nickname,
-                                            avatarImageFile = session.user.avatarImageFileId?.let { fileId ->
-                                                GetConversationQuery.AvatarImageFile1(fileId)
+                                            avatarImageFile = session.user.avatarImageFile?.let { f ->
+                                                GetConversationQuery.AvatarImageFile1(
+                                                    id = f.id,
+                                                    formats = (f.formats.map { format ->
+                                                        GetConversationQuery.Format2(
+                                                            url = format.url,
+                                                            name = format.name,
+                                                        )
+                                                    }) ?: emptyList()
+                                                )
                                             },
                                         ),
                                         insertedAt = response.data?.message?.insertedAt!!,

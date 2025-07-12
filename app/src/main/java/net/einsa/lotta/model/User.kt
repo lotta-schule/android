@@ -1,6 +1,7 @@
 package net.einsa.lotta.model
 
 import io.sentry.SentryOptions
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.einsa.lotta.GetCurrentUserQuery
 import io.sentry.protocol.User as SentryUser
@@ -13,19 +14,18 @@ data class User(
     var nickname: String? = null,
     var email: String? = null,
     var groups: List<Group> = emptyList(),
-    var avatarImageFileId: String? = null,
+    var avatarImageFile: @Contextual @Serializable GetCurrentUserQuery.AvatarImageFile? = null
 ) {
     companion object {
         fun from(userData: GetCurrentUserQuery.CurrentUser, tenant: Tenant): User {
             return User(
                 tenant = tenant,
-                id = userData.id!!,
+                id = userData.id,
                 name = userData.name,
                 nickname = userData.nickname,
-                groups = userData.groups?.mapNotNull { it?.let { Group.from(it) } }
-                    ?: emptyList(),
+                groups = userData.groups.map { it.let { Group.from(it) } },
                 email = userData.email,
-                avatarImageFileId = userData.avatarImageFile?.id,
+                avatarImageFile = userData.avatarImageFile
             )
         }
     }
