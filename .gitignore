@@ -20,3 +20,5 @@ sentry.properties
 
 # Sentry Config File
 sentry.properties
+
+google-services.json
