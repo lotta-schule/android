@@ -86,9 +86,8 @@ class CreateLoginSessionViewModel : ViewModel() {
             }
 
             val jsonString = response.body!!.string()
-            println(jsonString)
 
-            val result = Json.decodeFromString<ListTenantResult>(jsonString)
+            val result = Json { ignoreUnknownKeys = true }.decodeFromString<ListTenantResult>(jsonString)
 
             if (result.tenants != null) {
                 return@withContext result.tenants
