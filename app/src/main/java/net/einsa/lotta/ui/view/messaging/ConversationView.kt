@@ -32,7 +32,10 @@ fun ConversationView(conversationId: ID, vm: ConversationViewModel = viewModel()
             .fillMaxHeight()
     ) {
         MessageList(
-            messages = vm.conversation?.messages ?: emptyList(),
+            messages = vm.allMessages,
+            hasMoreOlder = vm.hasMoreOlder,
+            isLoadingOlder = vm.isLoadingOlder,
+            onLoadOlder = { scope.launch { vm.loadOlderMessages(conversationId, session) } },
             isGroupChat = vm.conversation?.groups?.isNotEmpty() == true,
             modifier = Modifier.weight(1f)
         )
