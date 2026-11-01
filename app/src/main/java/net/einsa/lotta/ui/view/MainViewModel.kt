@@ -3,11 +3,11 @@ package net.einsa.lotta.ui.view
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.ViewModel
-import com.apollographql.apollo3.api.Optional
-import com.apollographql.apollo3.cache.normalized.FetchPolicy
-import com.apollographql.apollo3.cache.normalized.apolloStore
-import com.apollographql.apollo3.cache.normalized.fetchPolicy
-import com.apollographql.apollo3.cache.normalized.watch
+import com.apollographql.apollo.api.Optional
+import com.apollographql.apollo.cache.normalized.FetchPolicy
+import com.apollographql.apollo.cache.normalized.apolloStore
+import com.apollographql.apollo.cache.normalized.fetchPolicy
+import com.apollographql.apollo.cache.normalized.watch
 import kotlinx.coroutines.flow.collectLatest
 import net.einsa.lotta.GetConversationQuery
 import net.einsa.lotta.GetConversationsQuery

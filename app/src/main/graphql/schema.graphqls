@@ -10,6 +10,8 @@ directive @specifiedBy(
   url: String!
 ) on SCALAR
 
+directive @apollo_client_ios_localCacheMutation on QUERY
+
 enum AnalyticsMetric {
   BOUNCE_RATE
   PAGEVIEWS

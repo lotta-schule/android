@@ -10,8 +10,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.content.ContextCompat
-import com.apollographql.apollo3.api.Optional
-import com.apollographql.apollo3.cache.normalized.apolloStore
+import com.apollographql.apollo.api.Optional
+import com.apollographql.apollo.cache.normalized.apolloStore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.DelicateCoroutinesApi

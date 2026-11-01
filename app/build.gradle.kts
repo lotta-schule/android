@@ -6,13 +6,19 @@ import java.nio.charset.Charset
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
 
-    id("com.apollographql.apollo3") version "3.8.6"
+    id("com.apollographql.apollo") version "4.4.4"
     id("io.sentry.android.gradle") version "6.14.0"
 
-    kotlin("plugin.serialization") version "1.9.22"
+    kotlin("plugin.serialization") version "2.4.21"
+    id("org.jetbrains.kotlin.plugin.compose")
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
 }
 
 fun getLocalIPv4(): List<String> {
@@ -28,7 +34,7 @@ fun getLocalIPv4(): List<String> {
 }
 
 android {
-    namespace = "net.einsa.schule.lotta"
+    namespace = "net.einsa.lotta"
     compileSdk = 37
 
     defaultConfig {
@@ -98,19 +104,19 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
     }
+
     packaging {
         resources {
             excludes.addAll(
@@ -123,13 +129,19 @@ android {
     }
 }
 
+androidComponents {
+    beforeVariants { variantBuilder ->
+        (variantBuilder as? com.android.build.api.variant.HasUnitTestBuilder)?.enableUnitTest = true
+    }
+}
+
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.19.0")
+    implementation("androidx.core:core-ktx:1.19.1")
     implementation("androidx.activity:activity:1.13.0")
-    implementation("androidx.fragment:fragment:1.8.9")
+    implementation("androidx.fragment:fragment:1.9.1")
     implementation("androidx.activity:activity-compose:1.13.0")
-    implementation(platform("androidx.compose:compose-bom:2026.06.01"))
+    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -139,22 +151,23 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
     implementation("androidx.security:security-crypto:1.1.0")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation("com.auth0:java-jwt:4.6.0")
-    implementation("com.apollographql.apollo3:apollo-runtime:3.8.6")
-    implementation("com.apollographql.apollo3:apollo-normalized-cache-sqlite:3.8.6")
-    implementation("com.google.firebase:firebase-messaging-ktx:24.1.2")
-    implementation("androidx.compose.material3.adaptive:adaptive-android:1.2.0")
+    implementation("com.auth0:java-jwt:4.6.2")
+    implementation("com.apollographql.apollo:apollo-runtime:4.4.4")
+    implementation("com.apollographql.apollo:apollo-normalized-cache-sqlite:4.4.4")
+    implementation("com.apollographql.apollo:apollo-normalized-cache:4.4.4")
+    implementation("com.google.firebase:firebase-messaging:26.0.1")
+    implementation("androidx.compose.material3.adaptive:adaptive-android:1.3.0")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
-    implementation("androidx.compose.ui:ui-test-android:1.11.4")
+    implementation("androidx.compose.ui:ui-test-android:1.12.1")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2026.06.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2026.09.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
@@ -163,7 +176,7 @@ dependencies {
 
 apollo {
     service("service") {
-        packageName.set("net.einsa.schule.lotta")
+        packageName.set("net.einsa.lotta")
 
         mapScalarToKotlinString("DateTime")
     }
@@ -211,7 +224,7 @@ sentry {
     }
 }
 
-task("bumpBuildNumber") {
+tasks.register("bumpBuildNumber") {
     doLast {
         buildFile.readText(Charset.defaultCharset())
             .replace("(versionCode\\s*=\\s*)(\\d+)".toRegex()) { matchResult ->
@@ -223,3 +236,8 @@ task("bumpBuildNumber") {
             }
     }
 }
+
+tasks.matching { it.name.startsWith("generateSentryBundleId") || it.name.startsWith("sentryUploadSourceBundle") }.configureEach {
+    dependsOn(tasks.matching { it.name.contains("ApolloSources") })
+}
+

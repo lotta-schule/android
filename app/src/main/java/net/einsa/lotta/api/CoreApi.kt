@@ -1,11 +1,11 @@
 package net.einsa.lotta.api
 
 import android.content.Context
-import com.apollographql.apollo3.ApolloClient
-import com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory
-import com.apollographql.apollo3.cache.normalized.normalizedCache
-import com.apollographql.apollo3.cache.normalized.sql.SqlNormalizedCacheFactory
-import com.apollographql.apollo3.network.ws.GraphQLWsProtocol
+import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.cache.normalized.api.MemoryCacheFactory
+import com.apollographql.apollo.cache.normalized.normalizedCache
+import com.apollographql.apollo.cache.normalized.sql.SqlNormalizedCacheFactory
+import com.apollographql.apollo.network.ws.GraphQLWsProtocol
 import net.einsa.lotta.App
 import net.einsa.lotta.AuthInfo
 import net.einsa.lotta.BuildConfig

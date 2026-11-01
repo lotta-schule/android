@@ -3,9 +3,9 @@ package net.einsa.lotta.ui.view.messaging
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.apollographql.apollo3.api.Error
-import com.apollographql.apollo3.api.Optional
-import com.apollographql.apollo3.cache.normalized.watch
+import com.apollographql.apollo.api.Error
+import com.apollographql.apollo.api.Optional
+import com.apollographql.apollo.cache.normalized.watch
 import net.einsa.lotta.GetConversationQuery
 import net.einsa.lotta.composition.UserSession
 import net.einsa.lotta.model.ID

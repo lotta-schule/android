@@ -1,10 +1,10 @@
 package net.einsa.lotta.composition
 
 import androidx.compose.runtime.compositionLocalOf
-import com.apollographql.apollo3.api.Optional
-import com.apollographql.apollo3.cache.normalized.FetchPolicy
-import com.apollographql.apollo3.cache.normalized.apolloStore
-import com.apollographql.apollo3.cache.normalized.fetchPolicy
+import com.apollographql.apollo.api.Optional
+import com.apollographql.apollo.cache.normalized.FetchPolicy
+import com.apollographql.apollo.cache.normalized.apolloStore
+import com.apollographql.apollo.cache.normalized.fetchPolicy
 import com.auth0.jwt.JWT
 import io.sentry.Sentry
 import kotlinx.serialization.Serializable

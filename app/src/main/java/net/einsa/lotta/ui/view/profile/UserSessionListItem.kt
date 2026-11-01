@@ -22,7 +22,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.apollographql.apollo3.cache.normalized.watch
+import com.apollographql.apollo.cache.normalized.watch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import net.einsa.lotta.GetConversationsQuery

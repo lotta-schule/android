@@ -3,8 +3,8 @@ package net.einsa.lotta.ui.component
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
-import com.apollographql.apollo3.api.Optional
-import com.apollographql.apollo3.cache.normalized.apolloStore
+import com.apollographql.apollo.api.Optional
+import com.apollographql.apollo.cache.normalized.apolloStore
 import net.einsa.lotta.App
 import net.einsa.lotta.GetConversationQuery
 import net.einsa.lotta.GetConversationsQuery

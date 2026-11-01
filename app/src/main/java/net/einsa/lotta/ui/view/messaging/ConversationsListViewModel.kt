@@ -2,10 +2,10 @@ package net.einsa.lotta.ui.view.messaging
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
-import com.apollographql.apollo3.api.Error
-import com.apollographql.apollo3.cache.normalized.FetchPolicy
-import com.apollographql.apollo3.cache.normalized.fetchPolicy
-import com.apollographql.apollo3.cache.normalized.watch
+import com.apollographql.apollo.api.Error
+import com.apollographql.apollo.cache.normalized.FetchPolicy
+import com.apollographql.apollo.cache.normalized.fetchPolicy
+import com.apollographql.apollo.cache.normalized.watch
 import net.einsa.lotta.GetConversationsQuery
 import net.einsa.lotta.composition.UserSession
 
