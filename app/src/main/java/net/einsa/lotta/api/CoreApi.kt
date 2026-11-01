@@ -1,12 +1,9 @@
 package net.einsa.lotta.api
 
-import android.content.Context
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.cache.normalized.api.MemoryCacheFactory
 import com.apollographql.apollo.cache.normalized.normalizedCache
-import com.apollographql.apollo.cache.normalized.sql.SqlNormalizedCacheFactory
 import com.apollographql.apollo.network.ws.GraphQLWsProtocol
-import net.einsa.lotta.App
 import net.einsa.lotta.AuthInfo
 import net.einsa.lotta.BuildConfig
 import java.io.File
@@ -19,11 +16,8 @@ val LOTTA_API_HTTP_URL =
 val LOTTA_API_WEBSOCKET_URL =
     (if (USE_SECURE_CONNECTION) "wss" else "ws") + "://$LOTTA_API_HOST/api/graphql-socket/websocket"
 
-val baseCacheDir =
-    App.context.getDir(
-        LOTTA_API_HOST.replace(Regex(":\\d{4,5}\$"), ""),
-        Context.MODE_PRIVATE
-    )!!
+val baseCacheDir: File
+    get() = LottaEnvironment.baseCacheDir
 
 class CoreApi() {
     var apollo: ApolloClient
@@ -40,7 +34,7 @@ class CoreApi() {
     init {
         this.apollo =
             ApolloClient.Builder()
-                .httpServerUrl("$LOTTA_API_HTTP_URL/api")
+                .httpServerUrl("${LottaEnvironment.apiBaseUrl}/api")
                 .normalizedCache(
                     MemoryCacheFactory(maxSizeBytes = 25 * 1024 * 1024)
                 )
@@ -53,7 +47,7 @@ class CoreApi() {
                 .normalizedCache(
                     MemoryCacheFactory(maxSizeBytes = 25 * 1024 * 1024)
                 )
-                .httpServerUrl("$LOTTA_API_HTTP_URL/api")
+                .httpServerUrl("${LottaEnvironment.apiBaseUrl}/api")
                 .addHttpHeader("Tenant", "slug:$tenantSlug")
                 .addHttpInterceptor(AuthorizationInterceptor(loginSession))
                 .addHttpInterceptor(RefreshTokenInterceptor(loginSession))
@@ -63,12 +57,12 @@ class CoreApi() {
     constructor(tenantSlug: String, tenantId: String, loginSession: AuthInfo) : this() {
         cacheFile = getCacheFile(tenantId)
 
-        val store = SqlNormalizedCacheFactory(cacheFile!!.absolutePath)
+        val store = LottaEnvironment.normalizedCacheFactory(cacheFile!!)
 
         apollo =
             ApolloClient.Builder()
                 .normalizedCache(store)
-                .httpServerUrl("$LOTTA_API_HTTP_URL/api")
+                .httpServerUrl("${LottaEnvironment.apiBaseUrl}/api")
                 .addHttpHeader("Tenant", "slug:$tenantSlug")
                 .addHttpInterceptor(AuthorizationInterceptor(loginSession))
                 .addHttpInterceptor(RefreshTokenInterceptor(loginSession))

@@ -6,6 +6,7 @@ import com.apollographql.apollo.network.http.HttpInterceptor
 import com.apollographql.apollo.network.http.HttpInterceptorChain
 import com.auth0.jwt.interfaces.DecodedJWT
 import net.einsa.lotta.AuthInfo
+import net.einsa.lotta.RenewException
 
 class AuthorizationInterceptor(
     var loginSession: AuthInfo?,
@@ -40,7 +41,15 @@ class AuthorizationInterceptor(
             return try {
                 loginSession?.renew()
                 addTokenAndProceed(loginSession?.accessToken, request, chain)
+            } catch (e: RenewException.InvalidToken) {
+                // The server rejected the refresh token: the user has to log in again
+                e.printStackTrace()
+                loginSession?.accessToken = null
+                loginSession?.refreshToken = null
+                // TODO: Here we must notify of a logout action
+                chain.proceed(request)
             } catch (e: Exception) {
+                // Connection problem: keep the session, try again with the next request
                 e.printStackTrace()
                 chain.proceed(request)
             }

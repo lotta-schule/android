@@ -4,8 +4,14 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import net.einsa.lotta.App
 
+/** Key/value store for secrets like refresh tokens. */
+interface SecretStore {
+    fun get(key: String): String?
+    fun set(key: String, value: String)
+    fun remove(key: String)
+}
 
-class SecretKeyStore(storeName: String = "lotta-auth") {
+class SecretKeyStore(storeName: String = "lotta-auth") : SecretStore {
 
     private val masterKeyAlias = MasterKey.Builder(App.context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -21,24 +27,26 @@ class SecretKeyStore(storeName: String = "lotta-auth") {
     )
 
     companion object {
-        val instance = SecretKeyStore()
+        val instance: SecretKeyStore by lazy { SecretKeyStore() }
 
         fun refreshTokenKey(userId: String, tenantId: String): String {
             return "$tenantId-$userId--refresh-token"
         }
     }
 
-    fun get(key: String): String? {
+    override fun get(key: String): String? {
         return sharedPreferences.getString(key, null)
     }
 
-    fun set(key: String, value: String) {
+    override fun set(key: String, value: String) {
         synchronized(sharedPreferences) {
             sharedPreferences.edit().putString(key, value).apply()
         }
     }
 
-    fun remove(key: String) {
-        sharedPreferences.edit().remove(key).apply()
+    override fun remove(key: String) {
+        synchronized(sharedPreferences) {
+            sharedPreferences.edit().remove(key).apply()
+        }
     }
 }

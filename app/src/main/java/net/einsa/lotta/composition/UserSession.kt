@@ -18,7 +18,9 @@ import net.einsa.lotta.GetCurrentUserQuery
 import net.einsa.lotta.GetTenantQuery
 import net.einsa.lotta.LoginMutation
 import net.einsa.lotta.RegisterDeviceMutation
+import net.einsa.lotta.RenewException
 import net.einsa.lotta.api.CoreApi
+import net.einsa.lotta.api.LottaEnvironment
 import net.einsa.lotta.api.baseCacheDir
 import net.einsa.lotta.model.ID
 import net.einsa.lotta.model.Tenant
@@ -29,6 +31,8 @@ import net.einsa.lotta.util.SecretKeyStore
 
 class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
     companion object {
+        private val json = Json { ignoreUnknownKeys = true }
+
         suspend fun createFromCredentials(
             tenantSlug: String,
             username: String,
@@ -51,7 +55,7 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
             ).execute()
             val tokenData = tokenGraphqlResponse.dataAssertNoErrors
             val accessTokenString =
-                tokenData.login?.accessToken ?: throw Exception("No access token in repsonse")
+                tokenData.login?.accessToken ?: throw Exception("No access token in response")
             val accessToken = JWT.decode(accessTokenString)
 
             if (!accessToken.claims.containsKey("typ") || accessToken.getClaim("typ")
@@ -64,6 +68,13 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
             }
 
             authInfo.accessToken = accessToken
+            // Prefer the refresh token from the response body; RefreshTokenInterceptor may already
+            // have picked one up from the Set-Cookie header. Setting it persists it right away,
+            // so the session survives an app restart independently of the renewal below.
+            tokenData.login?.refreshToken
+                ?.let { runCatching { JWT.decode(it) }.getOrNull() }
+                ?.let { authInfo.refreshToken = it }
+
             val user = User(tenant = tenant, id = accessToken.subject)
             val userSession = UserSession(tenant, authInfo, user)
 
@@ -88,24 +99,41 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
                 val files = baseCacheDir.listFiles { file ->
                     file.isFile
                 }?.mapNotNull { file ->
-                    Regex("^usersession-([^-]+)-([^-]+)\\.json\$").matchEntire(file.name)
+                    // The tenant slug may contain dashes, the user id does not
+                    Regex("^usersession-(.+)-([^-]+)\\.json\$").matchEntire(file.name)
                         ?.let { match ->
-                            val tenantSlug = match.groupValues[1]
                             val userId = match.groupValues[2]
-                            Triple(file, tenantSlug, userId)
+                            file to userId
                         }
                 } ?: emptyList()
 
-                for ((file, tenantSlug, userId) in files) {
-                    try {
+                for ((file, userId) in files) {
+                    var tenantId: ID? = null
+
+                    // Only drop a session if it really is unusable: unreadable, no or expired
+                    // refresh token, or the server rejected the token. Network or server errors
+                    // must not log the user out.
+                    fun dropSession(e: Exception) {
+                        Sentry.captureException(e)
+                        println("Dropping user session ${file.name}: ${e.message}")
+
+                        tenantId?.let {
+                            LottaEnvironment.secretStore.remove(
+                                SecretKeyStore.refreshTokenKey(userId, it)
+                            )
+                        }
+                        file.runCatching { delete() }
+                    }
+
+                    val userSession = try {
                         val userSessionData = file.readText(Charsets.UTF_8)
                         val persistedUserSession =
-                            Json.decodeFromString<PersistedUserSession>(userSessionData)
-                        val tenantId = persistedUserSession.tenant.id
-                        val refreshToken = SecretKeyStore.instance.get(
+                            json.decodeFromString<PersistedUserSession>(userSessionData)
+                        tenantId = persistedUserSession.tenant.id
+                        val refreshToken = LottaEnvironment.secretStore.get(
                             SecretKeyStore.refreshTokenKey(
                                 userId,
-                                tenantId
+                                persistedUserSession.tenant.id
                             )
                         ) ?: throw Exception("No refresh token found")
                         val jwt = JWT.decode(refreshToken)
@@ -118,31 +146,31 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
                         authInfo.refreshToken = jwt
                         try {
                             authInfo.renew()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            print("Could not renew auth token: ${e.message}")
+                        } catch (e: RenewException.ConnectionError) {
+                            // Offline or server problem: keep the session, renew later on demand
+                            println("Could not renew auth token: ${e.message}")
                         }
 
-                        val userSession = UserSession(
+                        UserSession(
                             tenant = persistedUserSession.tenant,
                             authInfo = authInfo,
                             user = persistedUserSession.user
                         )
+                    } catch (e: Exception) {
+                        dropSession(e)
+                        continue
+                    }
 
-                        sessions.add(userSession)
+                    sessions.add(userSession)
 
+                    try {
                         userSession.refetchUserData()
                         userSession.refetchTenantData()
-
                         userSession.writeToDisk()
                     } catch (e: Exception) {
+                        // Keep the persisted user and tenant data
                         Sentry.captureException(e)
-                        print("Could not read user session from disk: ${e.message}")
-
-                        SecretKeyStore.instance.remove(
-                            "refreshToken-$tenantSlug-$userId"
-                        )
-                        file.runCatching { delete() }
+                        println("Could not refresh user session data: ${e.message}")
                     }
                 }
             } catch (e: Exception) {
@@ -237,7 +265,7 @@ class UserSession(tenant: Tenant, authInfo: AuthInfo, user: User) {
     }
 
     fun removeFromKeychain() {
-        SecretKeyStore.instance.remove(
+        LottaEnvironment.secretStore.remove(
             SecretKeyStore.refreshTokenKey(
                 user.id,
                 tenant.id
