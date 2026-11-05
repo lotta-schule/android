@@ -108,7 +108,9 @@ jobs:
           retention-days: 60
 
       - name: Save service-account.json
-        run: echo "${{ secrets.GCLOUD_SERVICES_JSON }}"
+        env:
+          GCLOUD_SERVICES_JSON: ${{ secrets.GCLOUD_SERVICES_JSON }}
+        run: printf '%s' "$GCLOUD_SERVICES_JSON" > service-account.json
 
       - name: Upload to Play Store
         uses: r0adkll/upload-google-play@v1
