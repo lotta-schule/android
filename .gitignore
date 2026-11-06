@@ -22,3 +22,4 @@ sentry.properties
 sentry.properties
 
 google-services.json
+!app/ci/google-services.mock.json

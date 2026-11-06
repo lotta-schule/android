@@ -22,6 +22,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
+      - name: Use mock google-services.json
+        run: cp app/ci/google-services.mock.json app/google-services.json
+
       - name: Run unit tests
         run: |
           ./gradlew testProductionDebugUnitTest --stacktrace
@@ -87,6 +90,16 @@ jobs:
         run: |
           echo -n $KEYSTORE | base64 --decode > keystore.jks
 
+      - name: Save google-services.json
+        env:
+          FIREBASE_SERVICES_JSON: ${{ secrets.FIREBASE_SERVICES_JSON }}
+        run: |
+          if [[ "$(printf '%s' "$FIREBASE_SERVICES_JSON" | head -c 1)" == "{" ]]; then
+            printf '%s' "$FIREBASE_SERVICES_JSON" > app/google-services.json
+          else
+            printf '%s' "$FIREBASE_SERVICES_JSON" | base64 --decode > app/google-services.json
+          fi
+
       - name: Build Release bundle
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -109,8 +122,13 @@ jobs:
 
       - name: Save service-account.json
         env:
-          GCLOUD_SERVICES_JSON: ${{ secrets.GCLOUD_SERVICES_JSON }}
-        run: printf '%s' "$GCLOUD_SERVICES_JSON" > service-account.json
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [[ "$(printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" | head -c 1)" == "{" ]]; then
+            printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" > service-account.json
+          else
+            printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" | base64 --decode > service-account.json
+          fi
 
       - name: Upload to Play Store
         uses: r0adkll/upload-google-play@v1
