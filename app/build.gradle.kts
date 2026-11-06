@@ -41,7 +41,7 @@ android {
         applicationId = "net.einsa.schule.lotta"
         minSdk = 28
         targetSdk = 34
-        versionCode = 29
+        versionCode = 30
         versionName = "0.13"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
