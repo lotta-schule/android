@@ -74,10 +74,14 @@ jobs:
             flavor: production
             gradle_flavor: Production
             package_name: net.einsa.schule.lotta
+            # Production app is still a draft in Play Console; switch to "completed" once it has been published
+            release_status: draft
           - environment: staging
             flavor: staging
             gradle_flavor: Staging
             package_name: net.einsa.schule.lotta.staging
+            # Staging app is still a draft in Play Console; switch to "completed" once it has been published
+            release_status: draft
     environment:
       name: ${{ matrix.environment }}
 
@@ -151,4 +155,4 @@ jobs:
           packageName: ${{ matrix.package_name }}
           releaseFiles: ${{ steps.releaseAab.outputs.aabfile }}
           track: beta
-          status: completed
+          status: ${{ matrix.release_status }}
