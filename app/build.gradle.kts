@@ -40,7 +40,7 @@ android {
     defaultConfig {
         applicationId = "net.einsa.schule.lotta"
         minSdk = 28
-        targetSdk = 34
+        targetSdk = 37
         versionCode = 30
         versionName = "0.13"
 
