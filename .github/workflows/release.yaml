@@ -1,0 +1,171 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version part to bump"
+        required: true
+        type: choice
+        default: patch
+        options:
+          - major
+          - minor
+          - patch
+      track:
+        description: "Google Play track"
+        required: true
+        type: choice
+        default: production
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: "temurin"
+          java-version: 20
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Use mock google-services.json
+        run: cp app/ci/google-services.mock.json app/google-services.json
+
+      - name: Run unit tests
+        run: ./gradlew testProductionDebugUnitTest --stacktrace
+
+  bump_version:
+    name: Bump version and tag
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: "temurin"
+          java-version: 20
+
+      - name: Bump version
+        id: bump
+        run: |
+          version=$(./gradlew -q bumpVersion -Pbump=${{ inputs.bump }} | sed -n 's/^VERSION_NAME=//p')
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and tag
+        id: tag
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          tag="v$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/build.gradle.kts
+          git commit -m "Release $tag"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git tag -a "$tag" -m "Release $tag"
+          git push origin "HEAD:${GITHUB_REF_NAME}" "$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build and upload to Google Play
+    needs:
+      - bump_version
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.bump_version.outputs.tag }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: "temurin"
+          java-version: 20
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Decode Keystore
+        env:
+          KEYSTORE: ${{ secrets.KEYSTORE }}
+        run: echo -n "$KEYSTORE" | base64 --decode > keystore.jks
+
+      - name: Save google-services.json
+        env:
+          FIREBASE_SERVICES_JSON: ${{ secrets.FIREBASE_SERVICES_JSON }}
+        run: |
+          if [[ "$(printf '%s' "$FIREBASE_SERVICES_JSON" | head -c 1)" == "{" ]]; then
+            printf '%s' "$FIREBASE_SERVICES_JSON" > app/google-services.json
+          else
+            printf '%s' "$FIREBASE_SERVICES_JSON" | base64 --decode > app/google-services.json
+          fi
+
+      - name: Build Release bundle
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: ./gradlew bundleProductionRelease --stacktrace
+
+      - name: Get release file aab path
+        id: releaseAab
+        run: echo "aabfile=$(find app/build/outputs/bundle/productionRelease/*.aab)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release bundle artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Android Release Bundle - ${{ needs.bump_version.outputs.tag }}
+          path: ${{ steps.releaseAab.outputs.aabfile }}
+          retention-days: 90
+
+      - name: Save service-account.json
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [[ "$(printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" | head -c 1)" == "{" ]]; then
+            printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" > service-account.json
+          else
+            printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" | base64 --decode > service-account.json
+          fi
+
+      - name: Upload to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: service-account.json
+          packageName: net.einsa.schule.lotta
+          releaseFiles: ${{ steps.releaseAab.outputs.aabfile }}
+          track: ${{ inputs.track }}
+          status: completed

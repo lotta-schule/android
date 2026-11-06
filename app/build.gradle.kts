@@ -239,6 +239,34 @@ tasks.register("bumpBuildNumber") {
     }
 }
 
+// Usage: ./gradlew bumpVersion -Pbump=major|minor|patch
+// Bumps versionName (semver; a missing patch part counts as 0) and increments versionCode.
+tasks.register("bumpVersion") {
+    val bump = providers.gradleProperty("bump")
+    doLast {
+        val part = bump.orNull ?: throw GradleException("Missing -Pbump=major|minor|patch")
+        val versionNameRegex = "(versionName\\s*=\\s*\")([^\"]+)(\")".toRegex()
+        val text = buildFile.readText(Charset.defaultCharset())
+        val current = versionNameRegex.find(text)?.groupValues?.get(2)
+            ?: throw GradleException("versionName not found in ${buildFile.name}")
+        val (major, minor, patch) = current.split(".").map { it.toInt() }
+            .let { it + List(3 - it.size) { 0 } }
+        val next = when (part) {
+            "major" -> "${major + 1}.0.0"
+            "minor" -> "$major.${minor + 1}.0"
+            "patch" -> "$major.$minor.${patch + 1}"
+            else -> throw GradleException("Invalid bump '$part', expected major, minor or patch")
+        }
+        text
+            .replace(versionNameRegex) { "${it.groupValues[1]}$next${it.groupValues[3]}" }
+            .replace("(versionCode\\s*=\\s*)(\\d+)".toRegex()) {
+                "${it.groupValues[1]}${it.groupValues[2].toInt() + 1}"
+            }
+            .let { buildFile.writeText(it, Charset.defaultCharset()) }
+        println("VERSION_NAME=$next")
+    }
+}
+
 tasks.matching { it.name.startsWith("generateSentryBundleId") || it.name.startsWith("sentryUploadSourceBundle") }.configureEach {
     dependsOn(tasks.matching { it.name.contains("ApolloSources") })
 }
