@@ -267,7 +267,11 @@ tasks.register("bumpVersion") {
     }
 }
 
-tasks.matching { it.name.startsWith("generateSentryBundleId") || it.name.startsWith("sentryUploadSourceBundle") }.configureEach {
+tasks.matching {
+    it.name.startsWith("generateSentryBundleId") ||
+        it.name.startsWith("sentryCollectSources") ||
+        it.name.startsWith("sentryUploadSourceBundle")
+}.configureEach {
     dependsOn(tasks.matching { it.name.contains("ApolloSources") })
 }
 
